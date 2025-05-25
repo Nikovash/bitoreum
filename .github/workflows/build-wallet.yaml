@@ -3,10 +3,11 @@ name: Bitoreum Build
 on:
   push:
     branches:
-      - main
+      - 4.0.0
   pull_request:
     branches:
       - 4.0.0
+  workflow_dispatch:
 env:
   COIN_NAME: bitoreum
   BUILD_DIR: bitoreum-build
