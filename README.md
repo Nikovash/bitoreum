@@ -1,6 +1,6 @@
 What is Crystal Bitoreum?
 
-Crystal Bitoreum is a complete fork of the original Bitoreum project. With last official communication from the projects leader and lead developer in May 3rd 2023, and his last known whereabouts being near the Russian-Ukraine conflict zone I have feared the worst. Bitoreum had a robust user-base and I do not want to see this project fall into neglect. As such I have taken the project and will continue to maintain, develop and fix the project as we move forward.
+Crystal Bitoreum is a complete fork of the original Bitoreum project. With last official communication from the projects leader and lead developer on May 3rd 2023, and his last known whereabouts being near the Russian-Ukraine conflict zone I have feared the worst. Bitoreum had a robust user-base and I do not want to see this project fall into neglect. As such I have taken the project and will continue to maintain, develop and fix the project as we move forward.
 
 We intend to keep the token $BTRM the same and patch some of the known issues that were prevalent with the core in 2023. Once that has been achieved we intend to use the dev fee from the project (not the original fee as that is lost to the address holder, just the fee collected post fork), to seek a larger team so that if I happen to disappear the project can continue on if that is the choice of the surviving team and community around it.
 
