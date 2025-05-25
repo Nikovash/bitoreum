@@ -13,9 +13,10 @@ Bitoreum is a decentralized financial technology accessible to everyone that is 
 
 Problems Bitoreum attempts to solve
 
-Bitoreum is a transparent and salable financial system that aims to make cryptocurrencies accessible to everyone. There are four main directions in which we want to contribute.
+Bitoreum is a transparent and scaleable financial system that aims to make cryptocurrencies accessible to everyone. There are four main directions in which we want to contribute.
 Make managing BTRM easy for everyone by deploying mobile wallets for the major mobile OS, such as Android and IOS.
-Promote the adoption of cryptocurrencies by offering a payment gateway service. The service will provide a free plugin for small businesses to facilitate online transactions in cryptocurrency. Customers will be able to pay for goods and services in BTRM, while an entrepreneur will receive fiat money to his/her credit card.
+
+Promote the adoption of cryptocurrencies by offering a payment gateway service. The service will provide a free plugin for small businesses to facilitate online transactions in cryptocurrency. Customers will be able to pay for goods and services in $BTRM, while an entrepreneur will receive fiat money to his/her credit card.
 We think that all cryptocurrencies deserve to have access to the investors and to be trade able at an exchange. To achieve this goal we want to remove entry barriers in the form of high exchange listing fees and to offer everyone Bitroeum Exchange with its own blockchain, where all coins interested in listing can be traded against Bitroeum.
 We believe that everyone should be able to get a part of the financial pie with high returns that is usually accessible only to rich investors. That is why everyone can earn coins with modest initial investment by deploying Smartnodes and contributing to the blockchain stability and security.
 
