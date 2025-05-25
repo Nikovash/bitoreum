@@ -1,22 +1,3 @@
-Skip to content
-Navigation Menu
-Nikovash
-bitoreum
-
-Code
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-Bitoreum Build
-Update build-wallet.yaml #1
-Jobs
-Run details
-Workflow file for this run
-.github/workflows/build-wallet.yaml at 3e85ff6
 ---
 name: Bitoreum Build
 on:
