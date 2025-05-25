@@ -1,3 +1,22 @@
+Skip to content
+Navigation Menu
+Nikovash
+bitoreum
+
+Code
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+Settings
+Bitoreum Build
+Update build-wallet.yaml #1
+Jobs
+Run details
+Workflow file for this run
+.github/workflows/build-wallet.yaml at 3e85ff6
 ---
 name: Bitoreum Build
 on:
@@ -16,7 +35,7 @@ env:
 jobs:
   checking-build-version:
     name: Checking Build Versioning
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Trigger by
         run: |
@@ -234,3 +253,4 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-win-${{ env.BUILD_VERSION }}
           path: ${{ env.COMPRESS_DIR }}
+Update build-wallet.yaml · Nikovash/bitoreum@3e85ff6
