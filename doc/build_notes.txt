@@ -1,0 +1,94 @@
+# only for firsttime Run
+sudo apt update && sudo apt dist-upgrade -y && sudo apt-get install git curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake libdb-dev libdb++-dev screen zlib1g-dev -y
+
+cd /usr/src
+sudo wget https://www.python.org/ftp/python/3.10.17/Python-3.10.17.tgz
+sudo tar xzf Python-3.10.17.tgz
+cd Python-3.10.17
+sudo ./configure --enable-optimizations && sudo make -j$(nproc) && sudo make altinstall
+# end firsttime run
+
+#run this line everytime you open a new terminal
+alias python=python3.10 && alias python3=python3.10 && export PATH="/usr/bin:$PATH"
+
+mkdir ~/yerbas-build && cd ~/yerbas-build
+git clone https://github.com/The-Yerbas-Endeavor/yerbas.git -b 3.2.1.23
+
+cd ~/yerbas-build/yerbas/depends
+echo "building with $(nproc) threads"
+gcc --version
+export FALLBACK_DOWNLOAD_PATH=https://explorer.yerbas.org/depends/
+touch build.log
+make -j$(nproc) HOST=x86_64-pc-linux-gnu 2>&1 | tee build.log
+
+#We Are Here --->
+
+cd ..
+./autogen.sh
+./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+touch build.log
+make -j$(nproc) 2>&1 | tee build.log
+
+BUILD_DIR="$HOME/yerbas-build/build"
+mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip {BUILD_DIR}_debug
+mkdir -p ${BUILD_DIR}/yerbas-build ${BUILD_DIR}_not_strip/yerbas-build ${BUILD_DIR}_debug/yerbas-build
+cp src/{yerbas-cli,yerbasd,qt/yerbas-qt} ${BUILD_DIR}/yerbas-build
+cp src/{yerbas-cli,yerbasd,qt/yerbas-qt} ${BUILD_DIR}_not_strip/yerbas-build
+strip ${BUILD_DIR}/yerbas-build/*
+make clean && make distclean
+./autogen.sh
+./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+touch build_debug.log
+make -j$(nproc) 2>&1 | tee build_debug.log
+cp src/{yerbas-cli,yerbasd,qt/yerbas-qt} ${BUILD_DIR}_debug/yerbas-build
+COMPRESS_DIR=$HOME/yerbas-build/compressed
+mkdir -p ${COMPRESS_DIR}
+
+#VERSION=$(git describe --tags --abbrev=0)
+
+VERSION=3.2.1.23
+COIN_NAME=yerbas
+ARCH_TYPE=$(uname -m)
+OS="$(. /etc/os-release && echo "${ID}-${VERSION_ID}")"
+
+cd ${BUILD_DIR}/yerbas-build
+echo "sha256:" >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+shasum * >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+echo "openssl-sha256:" >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+sha256sum * >> checksums-${VERSION}.txt
+cat checksums-${VERSION}.txt
+tar -cf - -C "$BUILD_DIR" . | gzip -9 > "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-${VERSION}.tar.gz"
+
+cd ${BUILD_DIR}_debug/yerbas-build
+echo "sha256:" >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+shasum * >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+echo "openssl-sha256:" >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+sha256sum * >> checksums-${VERSION}.txt
+cat checksums-${VERSION}.txt
+tar -cf - -C "$BUILD_DIR" . | gzip -9 > "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz"
+
+cd ${BUILD_DIR}_not_strip/yerbas-build
+echo "sha256:" >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+shasum * >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+echo "openssl-sha256:" >> checksums-${VERSION}.txt
+echo "------------------------------------" >> checksums-${VERSION}.txt
+sha256sum * >> checksums-${VERSION}.txt
+cat checksums-${VERSION}.txt
+tar -cf - -C "$BUILD_DIR" . | gzip -9 > "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-not_strip-${VERSION}.tar.gz"
+
+cd ${COMPRESS_DIR}
+echo "sha256: `shasum ${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz`" >> checksums-${VERSION}.txt
+echo "openssl-sha256: `sha256sum ${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz`" >> checksums-${VERSION}.txt
+echo "sha256: `shasum ${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz`" >> checksums-${VERSION}.txt
+echo "openssl-sha256: `sha256sum ${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz`" >> checksums-${VERSION}.txt
+echo "sha256: `shasum ${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz`" >> checksums-${VERSION}.txt
+echo "openssl-sha256: `sha256sum ${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz`" >> checksums-${VERSION}.txt
+cat ${COMPRESS_DIR}/checksums-${VERSION}.txt
