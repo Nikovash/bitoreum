@@ -27,7 +27,6 @@ jobs:
 
     - name: Install build dependencies
       run: |
-        sudo dpkg --add-architecture arm64
         sudo apt update
         sudo apt install -y \
           git curl build-essential libtool autotools-dev automake \
@@ -62,17 +61,10 @@ jobs:
         cd depends
         make -j$(nproc) HOST=$HOST
 
-    - name: Verify GMP and other depends outputs
-      run: |
-        echo "Checking for GMP in depends output..."
-        find depends/${HOST} -name 'gmp*' || echo "GMP not found in depends output"
-
     - name: Autogen and configure (release)
       run: |
         ./autogen.sh
-        ./configure --prefix=`pwd`/depends/${HOST} \
-          CPPFLAGS="-I`pwd`/depends/${HOST}/include" \
-          LDFLAGS="-L`pwd`/depends/${HOST}/lib"
+        ./configure --prefix=`pwd`/depends/${HOST}
 
     - name: Build wallet (release)
       run: |
