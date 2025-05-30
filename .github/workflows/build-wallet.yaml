@@ -12,14 +12,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
-            arch: x86_64
-            host: x86_64-pc-linux-gnu
-
-          - os: ubuntu-20.04
-            arch: arm64
-            host: aarch64-linux-gnu
-
           - os: ubuntu-22.04
             arch: x86_64
             host: x86_64-pc-linux-gnu
