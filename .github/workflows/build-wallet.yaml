@@ -19,13 +19,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up QEMU for aarch64 builds
+    - name: Set up QEMU for ARM emulation
       if: matrix.arch == 'aarch64'
       uses: docker/setup-qemu-action@v3
       with:
         platforms: all
 
-    - name: Install dependencies
+    - name: Install build dependencies
       run: |
         sudo apt update
         sudo apt install -y \
@@ -47,21 +47,51 @@ jobs:
         export PATH="/usr/bin:$PATH"
         python3.10 --version
 
-    - name: Build depends
+    - name: Set HOST and build depends
       run: |
+        if [[ "${{ matrix.arch }}" == "x86_64" ]]; then
+          export HOST=x86_64-pc-linux-gnu
+        elif [[ "${{ matrix.arch }}" == "aarch64" ]]; then
+          export HOST=aarch64-linux-gnu
+        else
+          echo "Unsupported architecture: ${{ matrix.arch }}"
+          exit 1
+        fi
+        echo "HOST=$HOST" >> $GITHUB_ENV
         cd depends
-        make -j$(nproc) HOST=${{ matrix.arch }}-pc-linux-gnu
+        make -j$(nproc) HOST=$HOST
 
-    - name: Autogen and configure
+    - name: Autogen and configure (release)
       run: |
         ./autogen.sh
-        ./configure --prefix=$(pwd)/depends/${{ matrix.arch }}-pc-linux-gnu
+        ./configure --prefix=$(pwd)/depends/${HOST}
 
-    - name: Compile wallet
+    - name: Build wallet (release)
       run: |
         make -j$(nproc)
 
-    - name: Package binaries
+    - name: Collect and strip binaries
+      run: |
+        VERSION=4.0.0.0
+        COIN_NAME=bitoreum
+        BUILD_DIR=~/bitoreum-build/build
+        COMPRESS_DIR=~/bitoreum-build/compressed
+
+        mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${BUILD_DIR}_debug $COMPRESS_DIR
+
+        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} $BUILD_DIR
+        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} $BUILD_DIR_not_strip
+        strip $BUILD_DIR/*
+
+    - name: Configure and build (debug)
+      run: |
+        make clean && make distclean
+        ./autogen.sh
+        ./configure --prefix=$(pwd)/depends/${HOST} --disable-tests --enable-debug
+        make -j$(nproc)
+        cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ~/bitoreum-build/build_debug/
+
+    - name: Package binaries and generate checksums
       run: |
         VERSION=4.0.0.0
         COIN_NAME=bitoreum
@@ -69,18 +99,6 @@ jobs:
         COMPRESS_DIR=~/bitoreum-build/compressed
         ARCH_TYPE=${{ matrix.arch }}
         OS=${{ matrix.os }}
-
-        mkdir -p ${BUILD_DIR} ${BUILD_DIR}_debug ${BUILD_DIR}_not_strip $COMPRESS_DIR
-
-        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} $BUILD_DIR
-        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} $BUILD_DIR_not_strip
-        strip $BUILD_DIR/*
-
-        make clean && make distclean
-        ./autogen.sh
-        ./configure --prefix=$(pwd)/depends/${{ matrix.arch }}-pc-linux-gnu --disable-tests --enable-debug
-        make -j$(nproc)
-        cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} $BUILD_DIR_debug
 
         for type in "" "_debug" "_not_strip"; do
           DIR="${BUILD_DIR}${type}"
