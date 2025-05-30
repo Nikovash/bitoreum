@@ -1,112 +1,87 @@
----
-name: Bitoreum Build
+name: Build Bitoreum Wallet
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - 4.0.0
-  pull_request:
-    branches:
-      - 4.0.0
-  workflow_dispatch:
-
-env:
-  COIN_NAME: bitoreum
-  BUILD_DIR: bitoreum-build
-  COMPRESS_DIR: bitoreum-compress
-  TEST_LOG_ARTIFACT_DIR: test-logs
+      - main
+      - 4.0.0.0
 
 jobs:
-  checking-build-version:
-    name: Checking Build Versioning
-    runs-on: ubuntu-22.04
+  build:
+    strategy:
+      matrix:
+        target: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, windows-x64]
+
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Read release version (main)
-        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-        id: release-version
-        uses: christian-draeger/read-properties@1.0.1
-        with:
-          path: build.properties
-          property: 'release-version'
-
-      - name: Read snapshot version (pull_request/develop)
-        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
-        id: snapshot-version
-        uses: christian-draeger/read-properties@1.0.1
-        with:
-          path: build.properties
-          property: 'snapshot-version'
-
-      - name: Create version file
+      - name: Set Up Matrix Variables
+        id: vars
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "BUILD_VERSION=${{ steps.release-version.outputs.value }}" > version.txt
+          if [[ "${{ matrix.target }}" == "windows-x64" ]]; then
+            echo "TARGET_OS=windows" >> $GITHUB_ENV
+            echo "HOST=x86_64-w64-mingw32" >> $GITHUB_ENV
           else
-            echo "BUILD_VERSION=${{ steps.snapshot-version.outputs.value }}" > version.txt
+            echo "TARGET_OS=${{ matrix.target }}" >> $GITHUB_ENV
+            echo "HOST=x86_64-pc-linux-gnu" >> $GITHUB_ENV
           fi
 
-      - name: Upload version artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: version
-          path: version.txt
-
-  build-ubuntu22:
-    name: Ubuntu 22.04 Build
-    needs: checking-build-version
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: version
-
-      - name: Export BUILD_VERSION
-        run: echo "$(cat version.txt)" >> $GITHUB_ENV
-
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake \
-            libevent-dev libboost-all-dev libssl-dev libzmq3-dev libminiupnpc-dev \
-            libprotobuf-dev protobuf-compiler libqrencode-dev libdb-dev libdb++-dev
+          sudo apt update && sudo apt install -y \
+            git curl build-essential libtool autotools-dev automake pkg-config \
+            bsdmainutils cmake libdb-dev libdb++-dev zlib1g-dev python3 \
+            g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64
 
-      - name: Build depends
-        run: make -C depends -j$(nproc)
-
-      - name: Configure
+      - name: Install Python 3.10
         run: |
+          cd /usr/src
+          sudo wget https://www.python.org/ftp/python/3.10.17/Python-3.10.17.tgz
+          sudo tar xzf Python-3.10.17.tgz
+          cd Python-3.10.17
+          sudo ./configure --enable-optimizations
+          sudo make -j$(nproc)
+          sudo make altinstall
+          echo "alias python=python3.10" >> ~/.bashrc
+          echo "alias python3=python3.10" >> ~/.bashrc
+          echo 'export PATH="/usr/bin:$PATH"' >> ~/.bashrc
+
+      - name: Clone Repo & Build Depends
+        run: |
+          mkdir -p ~/bitoreum-build
+          cd ~/bitoreum-build
+          git clone https://github.com/Nikovash/bitoreum -b 4.0.0.0
+          cd bitoreum/depends
+          make -j$(nproc) HOST=$HOST
+
+      - name: Configure & Compile Wallet
+        run: |
+          cd ~/bitoreum-build/bitoreum
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
-
-      - name: Build binaries
-        run: |
+          ./configure --prefix=$(pwd)/depends/$HOST --host=$HOST
           make -j$(nproc)
-          mkdir -p $BUILD_DIR
-          mv src/{bitoreum-cli,bitoreum-tx,bitoreumd,qt/bitoreum-qt} $BUILD_DIR/
-          strip $BUILD_DIR/* || true
 
-      - name: Create checksums and compress
+      - name: Package Wallet
         run: |
-          cd $BUILD_DIR
-          for bin in bitoreum-cli bitoreumd bitoreum-tx bitoreum-qt; do
-            shasum $bin >> checksums.txt
-            sha256sum $bin >> checksums.txt
-          done
-          cd ..
-          tar -czvf ${COIN_NAME}-ubuntu22-${BUILD_VERSION}.tar.gz $BUILD_DIR
-          mkdir -p $COMPRESS_DIR
-          mv ${COIN_NAME}-ubuntu22-${BUILD_VERSION}.tar.gz $COMPRESS_DIR/
-          sha256sum ${COMPRESS_DIR}/${COIN_NAME}-ubuntu22-${BUILD_VERSION}.tar.gz >> ${COMPRESS_DIR}/checksums.txt
+          VERSION=4.0.0.0
+          COIN_NAME=bitoreum
+          ARCH_TYPE=$(uname -m)
+          OS="$TARGET_OS"
+          BUILD_DIR="$HOME/bitoreum-build/build"
+          COMPRESS_DIR="$HOME/bitoreum-build/compressed"
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.COIN_NAME }}-ubuntu22-${{ env.BUILD_VERSION }}
-          path: ${{ env.COMPRESS_DIR }}
+          mkdir -p "$BUILD_DIR"
+          cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} "$BUILD_DIR" 2>/dev/null || \
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} "$BUILD_DIR"
 
-# ... (Leave macOS and Windows unchanged or modernize if needed as above)
+          cd "$BUILD_DIR"
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+
+          mkdir -p "$COMPRESS_DIR"
+          tar -czf "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-${VERSION}.tar.gz" -C "$BUILD_DIR" .
