@@ -11,31 +11,35 @@ jobs:
   build:
     strategy:
       matrix:
-        target: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, windows-x64]
+        include:
+          - os: ubuntu-22.04
+            arch: x86_64
+            host: x86_64-pc-linux-gnu
 
-    runs-on: ubuntu-latest
+          - os: ubuntu-22.04
+            arch: arm64
+            host: aarch64-linux-gnu
+
+          - os: ubuntu-24.04
+            arch: x86_64
+            host: x86_64-pc-linux-gnu
+
+          - os: ubuntu-24.04
+            arch: arm64
+            host: aarch64-linux-gnu
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v3
-
-      - name: Set Up Matrix Variables
-        id: vars
-        run: |
-          if [[ "${{ matrix.target }}" == "windows-x64" ]]; then
-            echo "TARGET_OS=windows" >> $GITHUB_ENV
-            echo "HOST=x86_64-w64-mingw32" >> $GITHUB_ENV
-          else
-            echo "TARGET_OS=${{ matrix.target }}" >> $GITHUB_ENV
-            echo "HOST=x86_64-pc-linux-gnu" >> $GITHUB_ENV
-          fi
 
       - name: Install Dependencies
         run: |
           sudo apt update && sudo apt install -y \
             git curl build-essential libtool autotools-dev automake pkg-config \
             bsdmainutils cmake libdb-dev libdb++-dev zlib1g-dev python3 \
-            g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64
+            g++-aarch64-linux-gnu binutils-aarch64-linux-gnu zip
 
       - name: Install Python 3.10
         run: |
@@ -46,42 +50,45 @@ jobs:
           sudo ./configure --enable-optimizations
           sudo make -j$(nproc)
           sudo make altinstall
-          echo "alias python=python3.10" >> ~/.bashrc
-          echo "alias python3=python3.10" >> ~/.bashrc
-          echo 'export PATH="/usr/bin:$PATH"' >> ~/.bashrc
 
-      - name: Clone Repo & Build Depends
+      - name: Clone & Build Depends
         run: |
           mkdir -p ~/bitoreum-build
           cd ~/bitoreum-build
           git clone https://github.com/Nikovash/bitoreum -b 4.0.0.0
           cd bitoreum/depends
-          make -j$(nproc) HOST=$HOST
+          make -j$(nproc) HOST=${{ matrix.host }}
 
-      - name: Configure & Compile Wallet
+      - name: Configure & Build Wallet
         run: |
           cd ~/bitoreum-build/bitoreum
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/$HOST --host=$HOST
+          ./configure --prefix=$(pwd)/depends/${{ matrix.host }} --host=${{ matrix.host }}
           make -j$(nproc)
 
       - name: Package Wallet
         run: |
           VERSION=4.0.0.0
           COIN_NAME=bitoreum
-          ARCH_TYPE=$(uname -m)
-          OS="$TARGET_OS"
           BUILD_DIR="$HOME/bitoreum-build/build"
           COMPRESS_DIR="$HOME/bitoreum-build/compressed"
+          OS_NAME="${{ matrix.os }}-${{ matrix.arch }}"
 
-          mkdir -p "$BUILD_DIR"
-          cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} "$BUILD_DIR" 2>/dev/null || \
-          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} "$BUILD_DIR"
+          mkdir -p "$BUILD_DIR" "$COMPRESS_DIR"
+
+          cp src/bitoreum* "$BUILD_DIR" 2>/dev/null || true
+          cp src/qt/bitoreum-qt* "$BUILD_DIR" 2>/dev/null || true
 
           cd "$BUILD_DIR"
-          echo "sha256:" >> checksums.txt
+          echo "sha256:" > checksums.txt
           echo "------------------------------------" >> checksums.txt
-          sha256sum * >> checksums.txt
+          (sha256sum * 2>/dev/null || shasum * ) >> checksums.txt
 
-          mkdir -p "$COMPRESS_DIR"
-          tar -czf "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-${VERSION}.tar.gz" -C "$BUILD_DIR" .
+          TAR_NAME="${COIN_NAME}-${OS_NAME}-${VERSION}.tar.gz"
+          tar -czf "$COMPRESS_DIR/$TAR_NAME" ./*
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitoreum-${{ matrix.os }}-${{ matrix.arch }}
+          path: ~/bitoreum-build/compressed/*
