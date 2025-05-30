@@ -1,4 +1,4 @@
-name: Build Wallet
+name: Build Wallet (Windows Only)
 
 on:
   push:
@@ -9,49 +9,6 @@ on:
       - 4.0.0.0-win
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os_version: [22.04, 24.04]
-    name: Build for Ubuntu ${{ matrix.os_version }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Adjust sources list (if needed)
-        run: sudo sed -i "s/focal/${{ matrix.os_version }}/g" /etc/apt/sources.list || true
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git curl build-essential libtool autotools-dev automake \
-              pkg-config python3 bsdmainutils cmake libdb-dev libdb++-dev screen zlib1g-dev
-
-      - name: Build depends
-        run: |
-          cd depends
-          make -j$(nproc)
-
-      - name: Configure
-        run: |
-          ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/linux --disable-tests --disable-bench
-
-      - name: Build Wallet
-        run: make -j$(nproc)
-
-      - name: Package Linux binaries
-        run: |
-          mkdir -p linux-${{ matrix.os_version }}
-          cp src/bitoreum-cli src/bitoreumd src/qt/bitoreum-qt linux-${{ matrix.os_version }} || true
-          tar -czvf linux-${{ matrix.os_version }}.tar.gz linux-${{ matrix.os_version }}
-
-      - name: Upload Linux Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: linux-${{ matrix.os_version }}
-          path: linux-${{ matrix.os_version }}.tar.gz
-
   build-windows:
     runs-on: ubuntu-latest
     name: Cross-Compile for Windows x64
@@ -86,7 +43,7 @@ jobs:
           zip -r windows-wallet.zip windows
 
       - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-wallet
           path: windows-wallet.zip
