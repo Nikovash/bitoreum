@@ -70,7 +70,9 @@ jobs:
     - name: Autogen and configure (release)
       run: |
         ./autogen.sh
-        ./configure --prefix=`pwd`/depends/${HOST}
+        ./configure --prefix=`pwd`/depends/${HOST} \
+          CPPFLAGS="-I`pwd`/depends/${HOST}/include" \
+          LDFLAGS="-L`pwd`/depends/${HOST}/lib"
 
     - name: Build wallet (release)
       run: |
@@ -93,7 +95,9 @@ jobs:
       run: |
         make clean && make distclean
         ./autogen.sh
-        ./configure --prefix=`pwd`/depends/${HOST} --disable-tests --enable-debug
+        ./configure --prefix=`pwd`/depends/${HOST} --disable-tests --enable-debug \
+          CPPFLAGS="-I`pwd`/depends/${HOST}/include" \
+          LDFLAGS="-L`pwd`/depends/${HOST}/lib"
         make -j$(nproc)
         cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ~/bitoreum-build/build_debug/
 
