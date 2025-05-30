@@ -1,48 +1,32 @@
-name: Build Crystal Bitoreum Wallet
+name: Build Wallet Full Pipeline (x86_64 + ARM64)
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - main
+      - 4.0.0.0
+  pull_request:
+    branches:
       - 4.0.0.0
 
 jobs:
-  build:
+  build-linux:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - os: ubuntu-22.04
-            arch: x86_64
-            host: x86_64-pc-linux-gnu
-
-          - os: ubuntu-22.04
-            arch: arm64
-            host: aarch64-linux-gnu
-
-          - os: ubuntu-24.04
-            arch: x86_64
-            host: x86_64-pc-linux-gnu
-
-          - os: ubuntu-24.04
-            arch: arm64
-            host: aarch64-linux-gnu
-
-    runs-on: ${{ matrix.os }}
-
+        arch:
+          - x86_64-pc-linux-gnu
+          - aarch64-linux-gnu
+    name: Full Build for ${{ matrix.arch }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Install Dependencies
+      - name: Install dependencies and Python 3.10.17
         run: |
-          sudo apt update && sudo apt install -y \
-            git curl build-essential libtool autotools-dev automake pkg-config \
-            bsdmainutils cmake libdb-dev libdb++-dev zlib1g-dev python3 \
-            g++-aarch64-linux-gnu binutils-aarch64-linux-gnu zip
+          sudo apt update && sudo apt dist-upgrade -y
+          sudo apt install -y git curl build-essential libtool autotools-dev automake pkg-config \
+              python3 bsdmainutils cmake libdb-dev libdb++-dev screen zlib1g-dev \
+              wget make g++-aarch64-linux-gnu gcc-aarch64-linux-gnu
 
-      - name: Install Python 3.10
-        run: |
           cd /usr/src
           sudo wget https://www.python.org/ftp/python/3.10.17/Python-3.10.17.tgz
           sudo tar xzf Python-3.10.17.tgz
@@ -51,44 +35,72 @@ jobs:
           sudo make -j$(nproc)
           sudo make altinstall
 
-      - name: Clone & Build Depends
+      - name: Clone repo and build
         run: |
-          mkdir -p ~/bitoreum-build
-          cd ~/bitoreum-build
-          git clone https://github.com/Nikovash/bitoreum -b 4.0.0.0
-          cd bitoreum/depends
-          make -j$(nproc) HOST=${{ matrix.host }}
+          alias python=python3.10 && alias python3=python3.10 && export PATH="/usr/bin:$PATH"
 
-      - name: Configure & Build Wallet
-        run: |
-          cd ~/bitoreum-build/bitoreum
+          mkdir -p ~/bitoreum-build && cd ~/bitoreum-build
+          git clone https://github.com/Nikovash/bitoreum -b 4.0.0.0
+          cd bitoreum
+
+          cd depends
+          make -j$(nproc) HOST=${{ matrix.arch }}
+          cd ..
+
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/${{ matrix.host }} --host=${{ matrix.host }}
+          ./configure --prefix=$(pwd)/depends/${{ matrix.arch }} --host=${{ matrix.arch }}
           make -j$(nproc)
 
-      - name: Package Wallet
-        run: |
           VERSION=4.0.0.0
           COIN_NAME=bitoreum
-          BUILD_DIR="$HOME/bitoreum-build/build"
-          COMPRESS_DIR="$HOME/bitoreum-build/compressed"
-          OS_NAME="${{ matrix.os }}-${{ matrix.arch }}"
+          ARCH_TYPE=${{ matrix.arch }}
+          OS=$(lsb_release -is | tr '[:upper:]' '[:lower:]')-$(lsb_release -rs)
 
-          mkdir -p "$BUILD_DIR" "$COMPRESS_DIR"
+          BUILD_DIR=$HOME/bitoreum-build/build-${{ matrix.arch }}
+          COMPRESS_DIR=$HOME/bitoreum-build/compressed-${{ matrix.arch }}
+          mkdir -p "$BUILD_DIR" "${BUILD_DIR}_not_strip" "${BUILD_DIR}_debug" "$COMPRESS_DIR"
 
-          cp src/bitoreum* "$BUILD_DIR" 2>/dev/null || true
-          cp src/qt/bitoreum-qt* "$BUILD_DIR" 2>/dev/null || true
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} "$BUILD_DIR"
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} "$BUILD_DIR_not_strip"
+          strip "$BUILD_DIR"/* || true
+
+          make clean && make distclean
+          ./autogen.sh
+          ./configure --prefix=$(pwd)/depends/${{ matrix.arch }} --host=${{ matrix.arch }} --disable-tests --enable-debug
+          make -j$(nproc)
+
+          mv src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+
+          for DIR in "$BUILD_DIR" "$BUILD_DIR_debug" "$BUILD_DIR_not_strip"; do
+            cd "$DIR"
+            echo "sha256:" > checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            shasum * >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            echo "openssl-sha256:" >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            sha256sum * >> checksums.txt
+            cat checksums.txt
+          done
 
           cd "$BUILD_DIR"
-          echo "sha256:" > checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          (sha256sum * 2>/dev/null || shasum * ) >> checksums.txt
+          tar -czvf "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-${VERSION}.tar.gz" .
 
-          TAR_NAME="${COIN_NAME}-${OS_NAME}-${VERSION}.tar.gz"
-          tar -czf "$COMPRESS_DIR/$TAR_NAME" ./*
+          cd "$BUILD_DIR_debug"
+          tar -czvf "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-debug-${VERSION}.tar.gz" .
 
-      - name: Upload Artifacts
+          cd "$BUILD_DIR_not_strip"
+          tar -czvf "$COMPRESS_DIR/${COIN_NAME}-${OS}_${ARCH_TYPE}-not_strip-${VERSION}.tar.gz" .
+
+          cd "$COMPRESS_DIR"
+          for FILE in *.tar.gz; do
+            echo "sha256: $(shasum $FILE)" >> checksums.txt
+            echo "openssl-sha256: $(sha256sum $FILE)" >> checksums.txt
+          done
+          cat checksums.txt
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bitoreum-${{ matrix.os }}-${{ matrix.arch }}
-          path: ~/bitoreum-build/compressed/*
+          name: bitoreum-builds-${{ matrix.arch }}
+          path: ~/bitoreum-build/compressed-${{ matrix.arch }}
