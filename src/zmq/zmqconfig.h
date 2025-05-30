@@ -6,7 +6,7 @@
 #define BITCOIN_ZMQ_ZMQCONFIG_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitoreum-config.h>
+#include <config/crystal-bitoreum-config.h>
 #endif
 
 #include <stdarg.h>

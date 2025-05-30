@@ -1,7 +1,8 @@
-// Copyright (c) 2010 Satoshi Nakamoto
+ // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2022 The bitoreum developers
+// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2024-2025 The Cystal Bitoreum Developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -564,17 +565,11 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x3f590e1339dfd2a738315700c2d9d0b44075d27fb488d4846283d3d65e462e03"));
         assert(genesis.hashMerkleRoot == uint256S("0xd8d1d8170ebd919e5b5d157524a79f9a5004fefa79dd17baf849813b290e9cc4"));
 
-        vSeeds.emplace_back("seed00.bitoreum.org");
-        vSeeds.emplace_back("seed01.bitoreum.org");
-        vSeeds.emplace_back("seed02.bitoreum.org");
-        vSeeds.emplace_back("seed03.bitoreum.org");
-        vSeeds.emplace_back("seed04.bitoreum.org");
-        vSeeds.emplace_back("seed05.bitoreum.org");
-        vSeeds.emplace_back("seed06.bitoreum.org");
-        vSeeds.emplace_back("seed07.bitoreum.org");
-        vSeeds.emplace_back("seed08.bitoreum.org");
-        vSeeds.emplace_back("seed09.bitoreum.org");
-        vSeeds.emplace_back("seed10.bitoreum.org");
+        vSeeds.emplace_back("seed01.bitoreum.cc");
+        vSeeds.emplace_back("seed02.bitoreum.cc");
+        vSeeds.emplace_back("seed03.bitoreum.cc");
+		vSeeds.emplace_back("seed04.bitoreum.cc");
+		vSeeds.emplace_back("seed05.bitoreum.cc");
 
 
         // Bitoreum addresses start with 'B'
@@ -634,7 +629,7 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
-        vSporkAddresses = {"BanxgMPcMpXnuWQ2ogfQqEkwwVtjhAhXBR"};
+        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR"};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
@@ -728,11 +723,11 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("seed00.bitoreum.org");
-        vSeeds.emplace_back("seed01.bitoreum.org");
-        vSeeds.emplace_back("seed02.bitoreum.org");
-        vSeeds.emplace_back("seed03.bitoreum.org");
-        vSeeds.emplace_back("seed04.bitoreum.org");
+        vSeeds.emplace_back("seed01.bitoreum.cc");
+        vSeeds.emplace_back("seed02.bitoreum.cc");
+        vSeeds.emplace_back("seed03.bitoreum.cc");
+		vSeeds.emplace_back("seed04.bitoreum.cc");
+		vSeeds.emplace_back("seed05.bitoreum.cc");
 
         // Testnet Bitoreum addresses start with '
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,127);
@@ -783,7 +778,7 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
-        vSporkAddresses = {"tTiu15rN6PJFKqjBuLuNVHJAWKjNa5oibm"};
+        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR"};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
@@ -923,7 +918,7 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
-        vSporkAddresses = {"yjPtiKh2uwk3bDutTEA2q9mCtXyiZRWn55"};
+        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR"};
         nMinSporkKeys = 1;
         // devnets are started with no blocks and no MN, so we can't check for upgraded MN (as there are none)
         fBIP9CheckSmartnodesUpgraded = false;
@@ -1032,7 +1027,7 @@ public:
         nPoolNewMaxParticipants = 20;
 
         // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK
-        vSporkAddresses = {"RWGvGpd3yJdnfh9ziyHNDEoHMJBvnZ23zK"};
+        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR"};
         nMinSporkKeys = 1;
         // regtest usually has no smartnodes in most tests, so don't check for upgraged MNs
         fBIP9CheckSmartnodesUpgraded = false;

@@ -7,7 +7,7 @@
 #define BITCOIN_QT_BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitoreum-config.h>
+#include <config/crystal-bitoreum-config.h>
 #endif
 
 #include <amount.h>

@@ -1,0 +1,8 @@
+--- a/src/threshold.cpp
++++ b/src/threshold.cpp
+@@ -1,6 +1,8 @@
++#include <memory>
++
++std::unique_ptr<ThresholdScheme> pThresholdScheme = nullptr;
+ 
+ // existing code continues...

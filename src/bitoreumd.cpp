@@ -6,7 +6,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitoreum-config.h>
+#include <config/crystal-bitoreum-config.h>
 #endif
 
 #include <chainparams.h>
@@ -33,7 +33,7 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitoreum (https://www.bitoreum.org/),
+ * This is the developer documentation of the reference client for an experimental new digital currency called Crystal Bitoreum (https://www.bitoreum.cc),
  * which enables instant payments to anyone, anywhere in the world. Bitoreum uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *

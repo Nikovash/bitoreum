@@ -12,7 +12,7 @@
  * for both bitoreumd and bitoreum-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("Bitoreum Core");
+const std::string CLIENT_NAME("Crystal Bitoreum Core");
 
 /**
  * Client version number

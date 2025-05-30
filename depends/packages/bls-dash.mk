@@ -6,6 +6,7 @@ $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
 $(package)_sha256_hash=276c8573104e5f18bb5b9fd3ffd49585dda5ba5f6de2de74759dda8ca5a9deac
 $(package)_dependencies=gmp cmake
+$(package)_patches=depned_memory_010101.patch depend_MChris_101010.patch
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive
@@ -17,8 +18,8 @@ $(package)_relic_sha256_hash=ddad83b1406985a1e4703bd03bdbab89453aa700c0c99567cf8
 $(package)_extra_sources=$($(package)_relic_file_name)
 
 define $(package)_fetch_cmds
-  $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
-  $(call fetch_file,$(package),$($(package)_relic_download_path),$($(package)_relic_download_file),$($(package)_relic_file_name),$($(package)_relic_sha256_hash))
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_relic_download_path),$($(package)_relic_download_file),$($(package)_relic_file_name),$($(package)_relic_sha256_hash))
 endef
 
 define $(package)_extract_cmds
@@ -53,12 +54,10 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
+  patch -p1 -i $($(package)_patch_dir)/depned_memory_010101.patch && \
+  patch -p1 -i $($(package)_patch_dir)/depend_MChris_101010.patch && \
   sed -i.old "s|GIT_REPOSITORY https://github.com/relic-toolkit/relic.git|URL \"../../relic-toolkit-$($(package)_relic_version).tar.gz\"|" src/CMakeLists.txt && \
   sed -i.old "s|GIT_TAG        .*RELIC_GIT_TAG.*|URL_HASH SHA256=$($(package)_relic_sha256_hash)|" src/CMakeLists.txt
-endef
-
-define $(package)_patch_cmds
-  patch -p1 < $($(package)_patch_dir)/01-include-memory.patch
 endef
 
 define $(package)_config_cmds

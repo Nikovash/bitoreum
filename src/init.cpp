@@ -2,11 +2,12 @@
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
 // Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2024-2025 Crystal Bitoreum Developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitoreum-config.h>
+#include <config/crystal-bitoreum-config.h>
 #endif
 
 #include <init.h>
@@ -650,8 +651,8 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitoreum/bitoreum>";
-    const std::string URL_WEBSITE = "<https://bitoreum.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/Nikovash/bitoreum>";
+    const std::string URL_WEBSITE = "<https://bitoreum.cc>";
 
     return CopyrightHolders(_("Copyright (C)"), 2014, COPYRIGHT_YEAR) + "\n" +
            "\n" +
@@ -913,7 +914,7 @@ void PeriodicStats()
 }
 
 /** Sanity checks
- *  Ensure that Bitoreum Core is running in a usable environment with all
+ *  Ensure that Crystal Bitoreum Core is running in a usable environment with all
  *  necessary library support.
  */
 bool InitSanityCheck(void)
@@ -1649,9 +1650,9 @@ bool AppInitMain()
     // Warn about relative -datadir path.
     if (gArgs.IsArgSet("-datadir") && !fs::path(gArgs.GetArg("-datadir", "")).is_absolute()) {
         LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
-                  "current working directory '%s'. This is fragile, because if Bitoreum Core is started in the future "
+                  "current working directory '%s'. This is fragile, because if Crystal Bitoreum Core is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
-                  "also be data loss if Bitoreum Core is started while in a temporary directory.\n",
+                  "also be data loss if Crystal Bitoreum Core is started while in a temporary directory.\n",
             gArgs.GetArg("-datadir", ""), fs::current_path().string());
     }
 

@@ -6,7 +6,7 @@
 #include <support/cleanse.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitoreum-config.h>
+#include <config/crystal-bitoreum-config.h>
 #endif
 
 #ifdef WIN32
@@ -27,6 +27,7 @@
 #endif
 
 #include <algorithm>
+#include <stdexcept>  // ✅ Added to fix runtime_error issue
 #ifdef ARENA_DEBUG
 #include <iomanip>
 #include <iostream>

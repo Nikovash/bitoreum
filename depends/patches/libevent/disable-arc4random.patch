@@ -1,0 +1,11 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -1038,9 +1038,13 @@
+     AC_CHECK_FUNCS([arc4random])
+     AC_CHECK_FUNCS([arc4random_buf])
+     AC_CHECK_FUNCS([arc4random_uniform])
++
++    # Disable arc4random usage on systems where it's missing at link time (e.g., glibc)
++    AC_DEFINE(HAVE_ARC4RANDOM, 0, [Force disable arc4random])
++    AC_DEFINE(HAVE_ARC4RANDOM_BUF, 0, [Force disable arc4random_buf])
++    AC_DEFINE(HAVE_ARC4RANDOM_UNIFORM, 0, [Force disable arc4random_uniform])

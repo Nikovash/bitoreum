@@ -26,21 +26,29 @@ struct FounderRewardStructure {
 
 class FounderPayment {
 public:
-	FounderPayment(vector<FounderRewardStructure> rewardStructures = {}, int startBlock = 0, const string &address = DEFAULT_FOUNDER_ADDRESS) {
-		this->founderAddress = address;
-		this->startBlock = startBlock;
-		this->rewardStructures = rewardStructures;
-	}
-	~FounderPayment(){};
-	CAmount getFounderPaymentAmount(int blockHeight, CAmount blockReward);
-	void FillFounderPayment(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutFounderRet);
-	bool IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward);
-	int getStartBlock() {return this->startBlock;}
+    FounderPayment(vector<FounderRewardStructure> rewardStructures = {}, int startBlock = 0, const string &address = DEFAULT_FOUNDER_ADDRESS) {
+        this->founderAddress = address;
+        this->startBlock = startBlock;
+        this->rewardStructures = rewardStructures;
+    }
+
+    ~FounderPayment() {}
+
+    CAmount getFounderPaymentAmount(int blockHeight, CAmount blockReward);
+    void FillFounderPayment(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutFounderRet);
+    bool IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward);
+    
+    // ✅ Add this line:
+    void UpdateFounderAddressForHeight(int blockHeight);
+
+    int getStartBlock() { return this->startBlock; }
+
 private:
-	string founderAddress;
-	int startBlock;
-	vector<FounderRewardStructure> rewardStructures;
+    string founderAddress;
+    int startBlock;
+    vector<FounderRewardStructure> rewardStructures;
 };
+
 
 
 

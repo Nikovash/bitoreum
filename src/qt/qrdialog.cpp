@@ -21,7 +21,7 @@
 #endif
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitoreum-config.h> /* for USE_QRCODE */
+#include <config/crystal-bitoreum-config.h> /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE

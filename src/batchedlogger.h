@@ -6,6 +6,8 @@
 #ifndef _B_I_T_O_R_E_U_M__BATCHEDLOGGER_H
 #define _B_I_T_O_R_E_U_M__BATCHEDLOGGER_H
 
+#include <string>     // For std::string
+#include <cstdint>    // For uint64_t
 #include "tinyformat.h"
 
 class CBatchedLogger
