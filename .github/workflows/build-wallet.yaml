@@ -1,4 +1,4 @@
-name: Build Crystal Bitoreum Wallet
+name: Build Crystal Bitoreum Wallet (Linux Only)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-linux:
     strategy:
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
@@ -16,8 +16,14 @@ jobs:
     name: Build ${{ matrix.arch }} on ${{ matrix.os }}
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Set up QEMU for aarch64 builds
+      if: matrix.arch == 'aarch64'
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: all
 
     - name: Install dependencies
       run: |
@@ -27,7 +33,7 @@ jobs:
           pkg-config python3 bsdmainutils cmake libdb-dev libdb++-dev \
           screen zlib1g-dev wget
 
-    - name: Build and install Python 3.10.17
+    - name: Build Python 3.10.17 from source
       run: |
         cd /usr/src
         sudo wget https://www.python.org/ftp/python/3.10.17/Python-3.10.17.tgz
@@ -41,43 +47,21 @@ jobs:
         export PATH="/usr/bin:$PATH"
         python3.10 --version
 
-    - name: Set up directories
-      run: |
-        mkdir -p ~/bitoreum-build/compressed
-
     - name: Build depends
       run: |
         cd depends
         make -j$(nproc) HOST=${{ matrix.arch }}-pc-linux-gnu
 
-    - name: Autogen & Configure
+    - name: Autogen and configure
       run: |
         ./autogen.sh
         ./configure --prefix=$(pwd)/depends/${{ matrix.arch }}-pc-linux-gnu
 
-    - name: Compile Wallet
+    - name: Compile wallet
       run: |
         make -j$(nproc)
 
-    - name: Prepare Binaries
-      run: |
-        VERSION=4.0.0.0
-        COIN_NAME=bitoreum
-        BUILD_DIR=~/bitoreum-build/build
-        COMPRESS_DIR=~/bitoreum-build/compressed
-        mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${BUILD_DIR}_debug
-
-        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}
-        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip
-        strip ${BUILD_DIR}/*
-
-        make clean && make distclean
-        ./autogen.sh
-        ./configure --prefix=$(pwd)/depends/${{ matrix.arch }}-pc-linux-gnu --disable-tests --enable-debug
-        make -j$(nproc)
-        cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_debug
-
-    - name: Create Archives and Checksums
+    - name: Package binaries
       run: |
         VERSION=4.0.0.0
         COIN_NAME=bitoreum
@@ -85,6 +69,18 @@ jobs:
         COMPRESS_DIR=~/bitoreum-build/compressed
         ARCH_TYPE=${{ matrix.arch }}
         OS=${{ matrix.os }}
+
+        mkdir -p ${BUILD_DIR} ${BUILD_DIR}_debug ${BUILD_DIR}_not_strip $COMPRESS_DIR
+
+        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} $BUILD_DIR
+        cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} $BUILD_DIR_not_strip
+        strip $BUILD_DIR/*
+
+        make clean && make distclean
+        ./autogen.sh
+        ./configure --prefix=$(pwd)/depends/${{ matrix.arch }}-pc-linux-gnu --disable-tests --enable-debug
+        make -j$(nproc)
+        cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} $BUILD_DIR_debug
 
         for type in "" "_debug" "_not_strip"; do
           DIR="${BUILD_DIR}${type}"
@@ -100,8 +96,8 @@ jobs:
           tar -cf - -C "$DIR" . | gzip -9 > "$COMPRESS_DIR/$FILENAME"
         done
 
-    - name: Upload artifacts
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: bitoreum-${{ matrix.os }}-${{ matrix.arch }}-wallets
+        name: bitoreum-${{ matrix.os }}-${{ matrix.arch }}
         path: ~/bitoreum-build/compressed/*.tar.gz
