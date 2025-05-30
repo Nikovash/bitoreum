@@ -28,30 +28,20 @@ jobs:
             arch: arm64
             host: aarch64-linux-gnu
 
-          - os: macos-12
-            arch: x86_64
-            host: x86_64-apple-darwin
-
-          - os: macos-14
-            arch: arm64
-            host: arm64-apple-darwin
-
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Dependencies (Linux)
-        if: startsWith(matrix.os, 'ubuntu')
+      - name: Install Dependencies
         run: |
           sudo apt update && sudo apt install -y \
             git curl build-essential libtool autotools-dev automake pkg-config \
             bsdmainutils cmake libdb-dev libdb++-dev zlib1g-dev python3 \
             g++-aarch64-linux-gnu binutils-aarch64-linux-gnu zip
 
-      - name: Install Python 3.10 (Linux)
-        if: startsWith(matrix.os, 'ubuntu')
+      - name: Install Python 3.10
         run: |
           cd /usr/src
           sudo wget https://www.python.org/ftp/python/3.10.17/Python-3.10.17.tgz
@@ -60,12 +50,6 @@ jobs:
           sudo ./configure --enable-optimizations
           sudo make -j$(nproc)
           sudo make altinstall
-
-      - name: Install Dependencies (macOS)
-        if: startsWith(matrix.os, 'macos')
-        run: |
-          brew update
-          brew install automake libtool pkg-config cmake zip openssl@3
 
       - name: Clone & Build Depends
         run: |
@@ -100,13 +84,8 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           (sha256sum * 2>/dev/null || shasum * ) >> checksums.txt
 
-          if [[ "${{ matrix.os }}" == macos-* ]]; then
-            ZIP_NAME="${COIN_NAME}-${OS_NAME}-${VERSION}.zip"
-            zip -r "$COMPRESS_DIR/$ZIP_NAME" ./*
-          else
-            TAR_NAME="${COIN_NAME}-${OS_NAME}-${VERSION}.tar.gz"
-            tar -czf "$COMPRESS_DIR/$TAR_NAME" ./*
-          fi
+          TAR_NAME="${COIN_NAME}-${OS_NAME}-${VERSION}.tar.gz"
+          tar -czf "$COMPRESS_DIR/$TAR_NAME" ./*
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
