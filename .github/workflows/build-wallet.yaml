@@ -35,7 +35,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/${{ runner.os | toLower }} --disable-tests --disable-bench
+          ./configure --prefix=$(pwd)/depends/linux --disable-tests --disable-bench
 
       - name: Build Wallet
         run: make -j$(nproc)
