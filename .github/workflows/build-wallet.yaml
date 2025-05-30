@@ -1,4 +1,4 @@
-name: Build Wallet Full Pipeline (x86_64 + ARM64)
+name: Build Wallet Full Pipeline (x86_64 + ARM64 for Ubuntu 22.04 & 24.04)
 
 on:
   push:
@@ -13,10 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch:
-          - x86_64-pc-linux-gnu
-          - aarch64-linux-gnu
-    name: Full Build for ${{ matrix.arch }}
+        arch: [x86_64-pc-linux-gnu, aarch64-linux-gnu]
+        os_version: [22.04, 24.04]
+    name: Build ${{ matrix.arch }} on Ubuntu ${{ matrix.os_version }}
     steps:
       - uses: actions/checkout@v3
 
@@ -54,10 +53,10 @@ jobs:
           VERSION=4.0.0.0
           COIN_NAME=bitoreum
           ARCH_TYPE=${{ matrix.arch }}
-          OS=$(lsb_release -is | tr '[:upper:]' '[:lower:]')-$(lsb_release -rs)
+          OS=ubuntu-${{ matrix.os_version }}
 
-          BUILD_DIR=$HOME/bitoreum-build/build-${{ matrix.arch }}
-          COMPRESS_DIR=$HOME/bitoreum-build/compressed-${{ matrix.arch }}
+          BUILD_DIR=$HOME/bitoreum-build/build-${{ matrix.arch }}-${{ matrix.os_version }}
+          COMPRESS_DIR=$HOME/bitoreum-build/compressed-${{ matrix.arch }}-${{ matrix.os_version }}
           mkdir -p "$BUILD_DIR" "${BUILD_DIR}_not_strip" "${BUILD_DIR}_debug" "$COMPRESS_DIR"
 
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} "$BUILD_DIR"
@@ -102,5 +101,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bitoreum-builds-${{ matrix.arch }}
-          path: ~/bitoreum-build/compressed-${{ matrix.arch }}
+          name: bitoreum-builds-${{ matrix.arch }}-ubuntu-${{ matrix.os_version }}
+          path: ~/bitoreum-build/compressed-${{ matrix.arch }}-${{ matrix.os_version }}
