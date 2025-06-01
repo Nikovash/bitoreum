@@ -48,13 +48,11 @@ jobs:
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
 
       - name: Configure
         run: |
           ./autogen.sh
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
 
       - name: Build Binaries
@@ -70,20 +68,14 @@ jobs:
         run: |
           cd ${BUILD_DIR}
           echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           zip -r ../${COIN_NAME}-win-${{ needs.get-version.outputs.version }}.zip .
           cd ../${BUILD_DIR}_not_strip
           echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           zip -r ../${COIN_NAME}-win-not_strip-${{ needs.get-version.outputs.version }}.zip .
           cd ..
