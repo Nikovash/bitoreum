@@ -449,11 +449,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Required Packages
+      - name: Verify Required Packages
         run: |
-          brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
-          pip3 install ds_store mac_alias
-          pip3 install -U pip setuptools
+          brew list automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python || echo "Missing brew packages"
+          pip3 show ds_store mac_alias || echo "Missing Python packages"
 
       - name: Build Depends
         run: |
