@@ -443,7 +443,7 @@ jobs:
  build-macos-12:
   name: macOS 12 Build
   needs: get-version
-  runs-on: [self-hosted, macOS-12]
+  runs-on: [self-hosted, macOS]
 
   steps:
     - name: Checkout
