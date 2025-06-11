@@ -456,8 +456,8 @@ jobs:
 
       - name: Build Depends
         run: |
-          echo "building with $(nproc) threads"
-          make -C depends -j$(nproc) HOST=x86_64-apple-darwin21
+          echo "building with (($(sysctl -n hw.ncpu) - 1)) threads"
+          make -C depends -j$(($(sysctl -n hw.ncpu) - 1)) HOST=x86_64-apple-darwin21
 
       - name: Configure
         run: |
@@ -466,7 +466,7 @@ jobs:
 
       - name: Build Binaries
         run: |
-          make -j$(nproc)
+          make -j$(($(sysctl -n hw.ncpu) - 1))
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}/
           mv src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
