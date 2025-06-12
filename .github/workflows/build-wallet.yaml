@@ -473,7 +473,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/x86_64-apple-darwin21
+          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin21
       - name: Build Binaries
         run: |
           make -j$(($(sysctl -n hw.ncpu) - 1))
@@ -487,7 +487,7 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/x86_64-apple-darwin21 --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin21 --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
