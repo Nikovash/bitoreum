@@ -220,7 +220,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/x86_64-w64-mingw32
+          ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -234,7 +234,7 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/x86_64-w64-mingw32 --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_debug/
@@ -314,7 +314,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -329,7 +329,7 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
@@ -396,7 +396,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -410,7 +410,7 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
