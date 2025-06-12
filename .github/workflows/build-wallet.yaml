@@ -481,16 +481,7 @@ jobs:
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_bitoreum ${TEST_DIR}
-          strip ${BUILD_DIR}/*   
-      - name: Build Debug Binaries
-        run: |
-          make clean
-          make distclean
-          ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin21 --disable-tests --enable-debug
-          make -j$(nproc)
-          mkdir -p ${BUILD_DIR}_debug
-          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+          strip ${BUILD_DIR}/*
       - name: Generate Checksum and Compress
         run: |
           cd ${BUILD_DIR}
