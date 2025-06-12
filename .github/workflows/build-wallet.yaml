@@ -514,29 +514,26 @@ jobs:
           echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macos-12-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
           cat checksums.txt
           cd ..
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-macos-12-x86-dmg-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-macos-12-x86-dmg-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
-
       - name: Generate Macos dmg files
         run: |
           make deploy
           mkdir -p macos-dmg
-          mv Crystal-Bitoreum-Qt.dmg macos-dmg/
+          # Rename to your preferred name (optional) or use actual filename created
+          mv Bitoreum-Qt.dmg macos-dmg/Crystal-Bitoreum-Qt.dmg
           cd macos-dmg
-          echo "sha256: $(shasum crystal-bitoreum-Qt.dmg)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 crystal-bitoreum-Qt.dmg)" >> checksums.txt
+          echo "sha256: $(shasum Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
+          echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
           cd ..
-
       - name: Upload dmg file
         uses: actions/upload-artifact@v4
         with:
