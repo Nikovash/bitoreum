@@ -5,6 +5,11 @@ $(package)_file_name=biplist-$($(package)_version).tar.gz
 $(package)_sha256_hash=4c0549764c5fe50b28042ec21aa2e14fe1a2224e239a1dae77d9e7f3932aa4c6
 $(package)_install_libdir=$(build_prefix)/lib/python/dist-packages
 
+# macOS-only patch to remove deprecated ez_setup from setup.py
+ifeq ($(host_os),darwin)
+$(package)_patches=osx.patch
+endif
+
 define $(package)_build_cmds
     python3 setup.py build
 endef
