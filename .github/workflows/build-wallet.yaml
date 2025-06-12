@@ -73,7 +73,7 @@ jobs:
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum.exe ${TEST_DIR}
+          mv src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
@@ -147,7 +147,7 @@ jobs:
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum.exe ${TEST_DIR}
+          mv src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
