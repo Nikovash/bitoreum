@@ -457,7 +457,7 @@ jobs:
   build-macos-12-x86:
     name: macOS 12 x86 Build
     needs: get-version
-    runs-on: [self-hosted, macOS, X64, macOS-12]
+    runs-on: [self-hosted, macOS, X64, macos12]
 
     steps:
       - name: Checkout
