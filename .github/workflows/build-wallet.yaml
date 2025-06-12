@@ -71,8 +71,8 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}/
-          mv src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_not_strip/
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
+          mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_bitoreum.exe ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
@@ -83,7 +83,7 @@ jobs:
           ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
-          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -145,8 +145,8 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}/
-          mv src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_not_strip/
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
+          mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_bitoreum.exe ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
@@ -157,7 +157,7 @@ jobs:
           ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
-          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -220,7 +220,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32
+          ./configure --prefix=$`pwd`/depends/x86_64-w64-mingw32
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -229,6 +229,15 @@ jobs:
           mv src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_not_strip/
           mv src/test/test_bitoreum.exe ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
+      - name: Build Debug Binaries
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=$`pwd`/depends/x86_64-w64-mingw32 --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_debug/
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -305,7 +314,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
+          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -320,10 +329,10 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
-          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -387,7 +396,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
+          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -401,10 +410,10 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
-          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -453,22 +462,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Verify Required Packages
         run: |
           brew list automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python || echo "Missing brew packages"
           pip3 show ds_store mac_alias || echo "Missing Python packages"
-
       - name: Build Depends
         run: |
           echo "building with (($(sysctl -n hw.ncpu) - 1)) threads"
           make -C depends -j$(($(sysctl -n hw.ncpu) - 1)) HOST=x86_64-apple-darwin21
-
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin21
-
+          ./configure --prefix=$`pwd`/depends/x86_64-apple-darwin21
       - name: Build Binaries
         run: |
           make -j$(($(sysctl -n hw.ncpu) - 1))
@@ -476,8 +481,16 @@ jobs:
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_bitoreum ${TEST_DIR}
-          strip ${BUILD_DIR}/*
-
+          strip ${BUILD_DIR}/*   
+      - name: Build Debug Binaries
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=$`pwd`/depends/x86_64-apple-darwin21 --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
       - name: Generate Checksum and Compress
         run: |
           cd ${BUILD_DIR}
