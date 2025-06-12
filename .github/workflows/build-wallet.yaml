@@ -514,15 +514,16 @@ jobs:
           echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macos-12-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
           cat checksums.txt
           cd ..
-      - name: Upload Artifacts
+      - name: Upload Core Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-macos-12-x86-dmg-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-macos-12-x86-core-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
+
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-macos-12-x86-dmg-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-macos-12-x86-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
       - name: Generate Macos dmg files
         run: |
