@@ -27,7 +27,7 @@ runs-on: ubuntu-latest
 steps:
 - name: Triggered By
 run: |
-        echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
+      echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
      - name: Checkout
 uses: actions/checkout@v4
 
