@@ -30,7 +30,6 @@ run: |
     echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
      - name: Checkout
 uses: actions/checkout@v4
-
 - name: Generate version manually
 id: selected-version
 run: |
