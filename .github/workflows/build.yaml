@@ -33,7 +33,7 @@ uses: actions/checkout@v4
 - name: Generate version manually
 id: selected-version
 run: |
-         VERSION=4.0.0.0
+         VERSION=1001
          echo "version=$VERSION" >> $GITHUB_OUTPUT
          echo "BUILD_VERSION=$VERSION" > version.txt
      - name: Upload Artifacts
