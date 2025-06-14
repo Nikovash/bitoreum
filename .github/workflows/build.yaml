@@ -31,10 +31,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate version manually
+      - name: Generate Version Logic
         id: selected-version
         run: |
-          VERSION=4.0.0.0
+          VERSION="${GITHUB_REF_NAME}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "BUILD_VERSION=$VERSION" > version.txt
       - name: Upload Artifacts
