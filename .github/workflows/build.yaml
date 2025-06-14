@@ -3,10 +3,10 @@ name: Full Crystal Bitoreum Build
 on:
 push:
 branches:
-- 4.0.0.0
+- 1001
 pull_request:
 branches:
-- 4.0.0.0
+- 1001
 workflow_dispatch:
 
 env:
