@@ -548,7 +548,7 @@ jobs:
           name: ${{ env.COIN_NAME }}-macos-12-x86-dmg-${{ needs.get-version.outputs.version }}
           path: macos-dmg
           
-    build-macos-13-x86:
+  build-macos-13-x86:
     name: macOS 13 x86 Build
     needs: get-version
     runs-on: macos-13
