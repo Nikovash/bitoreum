@@ -440,6 +440,7 @@ jobs:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
 
+
   build-macos-12-x86:
 
 
