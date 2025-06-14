@@ -34,7 +34,7 @@ jobs:
       - name: Generate Version Logic
         id: selected-version
         run: |
-          VERSION="${GITHUB_REF_NAME}
+          VERSION="${GITHUB_REF_NAME}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "BUILD_VERSION=$VERSION" > version.txt
       - name: Upload Artifacts
