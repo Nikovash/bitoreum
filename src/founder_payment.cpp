@@ -22,7 +22,7 @@ CAmount FounderPayment::getFounderPaymentAmount(int blockHeight, CAmount blockRe
 
 void FounderPayment::UpdateFounderAddressForHeight(int blockHeight) {
     if (blockHeight >= 823500) {
-        founderAddress = "BanxgMPcMpXnuWQ2ogfQqEkwwVtjhAhXBR";
+        founderAddress = "BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR";
     } else {
         founderAddress = DEFAULT_FOUNDER_ADDRESS;
     }
