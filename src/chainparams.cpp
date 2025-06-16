@@ -629,7 +629,7 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
-        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR",};
+        vSporkAddresses = {"Bo3hXk1d5mgu1dfUjwPj5FvWXA4JGNBQqc",};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
@@ -729,7 +729,7 @@ public:
 		vSeeds.emplace_back("seed04.bitoreum.cc");
 		vSeeds.emplace_back("seed05.bitoreum.cc");
 
-        // Testnet Bitoreum addresses start with '
+        // Testnet Bitoreum addresses start with 't'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,127);
         // Testnet Bitoreum script addresses start with '8' or '9'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,19);
@@ -761,7 +761,8 @@ public:
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
 
         std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "tTiu15rN6PJFKqjBuLuNVHJAWKjNa5oibm");
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "tEnd5NJn395ZnfHM5erLBQ22rpfKGQLpbn");
+                                                     /// "cSQCiB4E5S9pCNRkhMWiTvPYfVE9khy6jEWepTvhXn7ZqHBfv1Er"
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -778,7 +779,7 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
-        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR"};
+        vSporkAddresses = {"tEnd5NJn395ZnfHM5erLBQ22rpfKGQLpbn"};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
