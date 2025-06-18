@@ -1,4 +1,4 @@
- // Copyright (c) 2010 Satoshi Nakamoto
+// Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
 // Copyright (c) 2020-2022 The Bitoreum developers
@@ -634,10 +634,10 @@ public:
         fBIP9CheckSmartnodesUpgraded = true;
 
         checkpointData = {
-            {
-                { 0,      uint256S("0x3f590e1339dfd2a738315700c2d9d0b44075d27fb488d4846283d3d65e462e03")}
-                { 824500, uint256S("0x90b619df13b18a61dd37808f9557e5692283a1906134587bd176767d54167bf0")}
-            }  
+            {   
+                { 0,      uint256S("0x3f590e1339dfd2a738315700c2d9d0b44075d27fb488d4846283d3d65e462e03") },
+                { 824500, uint256S("0x90b619df13b18a61dd37808f9557e5692283a1906134587bd176767d54167bf0") }
+            }
     };
 
         chainTxData = ChainTxData{
