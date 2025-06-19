@@ -105,6 +105,10 @@ public:
         int height = index == nullptr ? 0 : index->nHeight;
         return height >= GetConsensus().nFutureForkBlock;
     };
+    bool IsProtocolUpgradeActive(CBlockIndex *index) const {
++        int height = index == nullptr ? 0 : index->nHeight;
++        return height >= GetConsensus().nProtocolUpgradeBlock;
++   };
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     bool BIP9CheckSmartnodesUpgraded() const { return fBIP9CheckSmartnodesUpgraded; }
