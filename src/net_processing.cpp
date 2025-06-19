@@ -1495,7 +1495,6 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
         pfrom->fDisconnect = true;
         send = false;
     }
-    int minPeerProtoVersion = Params().IsProtocolUpgradeActive(chainActive.Tip()) ? MIN_PEER_PROTO_VERSION : OLD_MIN_PEER_PROTO_VERSION;
     // Pruned nodes may have deleted the block, so check whether
     // it's available before trying to send.
     if (send && (pindex->nStatus & BLOCK_HAVE_DATA))
