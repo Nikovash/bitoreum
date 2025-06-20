@@ -3,9 +3,11 @@ name: Full Crystal Bitoreum Build
 on:
   push:
     branches:
+      - main
       - 4.0.0.*
   pull_request:
     branches:
+      - main
       - 4.0.0.*
   workflow_dispatch:
 
@@ -50,11 +52,17 @@ jobs:
     name: Ubuntu 24 x86 Build
     needs: get-version
     runs-on: ubuntu-24.04
+    env:
+      ARCH_TYPE: x86
+      OS: ubuntu-24.04
+      BUILD_DIR: build
+      COMPRESS_DIR: compress
+      TEST_DIR: test
+      COIN_NAME: bitoreum
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
@@ -66,21 +74,21 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
       - name: Build Binaries
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
-          mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum ${TEST_DIR}
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
+          cp src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
@@ -88,47 +96,67 @@ jobs:
         run: |
           mkdir -p ${COMPRESS_DIR}
           for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
-            cd $dir
+            case $dir in
+              *debug) suffix="debug" ;;
+              *_not_strip) suffix="notstrip" ;;
+              *) suffix="release" ;;
+            esac
+            rm -rf temp
+            mkdir -p temp/bitoreum-build
+            # Copy binaries into build folder
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
+            # Generate checksums inside the build folder
+            pushd temp/bitoreum-build
             echo "sha256:" > checksums.txt
             echo "------------------------------------" >> checksums.txt
-            shasum * >> checksums.txt
+            shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
             echo "------------------------------------" >> checksums.txt
             echo "openssl-sha256:" >> checksums.txt
             echo "------------------------------------" >> checksums.txt
-            sha256sum * >> checksums.txt
-            cat checksums.txt
-            base=$(basename $dir)
-            tar -czf ../${COIN_NAME}-ubuntu24-${base##*-}-${{ needs.get-version.outputs.version }}.tar.gz *
-            cd ..
+            sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
+            popd
+            # Compress into tarball with structured name
+            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
           done
           mv *.tar.gz ${COMPRESS_DIR}/
+          # Global checksums for tarballs
           cd ${COMPRESS_DIR}
+          echo "Checksums for release archives:" > checksums.txt
+          echo "------------------------------------" >> checksums.txt
           for f in *.tar.gz; do
+            echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-ubuntu24-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-ubuntu24-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
+
 
   build-ubuntu22-x86:
     name: Ubuntu 22 x86 Build
     needs: get-version
     runs-on: ubuntu-22.04
+    env:
+      ARCH_TYPE: x86
+      OS: ubuntu-22.04
+      BUILD_DIR: build
+      COMPRESS_DIR: compress
+      TEST_DIR: test
+      COIN_NAME: bitoreum
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
@@ -140,21 +168,21 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
       - name: Build Binaries
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
-          mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum ${TEST_DIR}
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
+          cp src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
@@ -162,38 +190,47 @@ jobs:
         run: |
           mkdir -p ${COMPRESS_DIR}
           for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
-            cd $dir
+            case $dir in
+              *debug) suffix="debug" ;;
+              *_not_strip) suffix="notstrip" ;;
+              *) suffix="release" ;;
+            esac
+            rm -rf temp
+            mkdir -p temp/bitoreum-build
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
+            pushd temp/bitoreum-build
             echo "sha256:" > checksums.txt
             echo "------------------------------------" >> checksums.txt
-            shasum * >> checksums.txt
+            shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
             echo "------------------------------------" >> checksums.txt
             echo "openssl-sha256:" >> checksums.txt
             echo "------------------------------------" >> checksums.txt
-            sha256sum * >> checksums.txt
-            cat checksums.txt
-            base=$(basename $dir)
-            tar -czf ../${COIN_NAME}-ubuntu22-${base##*-}-${{ needs.get-version.outputs.version }}.tar.gz *
-            cd ..
+            sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
+            popd
+            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
           done
           mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
+          echo "Checksums for release archives:" > checksums.txt
+          echo "------------------------------------" >> checksums.txt
           for f in *.tar.gz; do
+            echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-ubuntu22-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-ubuntu22-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
-  
+
   build-win64:
     name: Win64 x86 Build
     needs: get-version
@@ -298,11 +335,14 @@ jobs:
     env:
       ARCH_TYPE: arm64
       OS: ubuntu-22.04
+      BUILD_DIR: build
+      COMPRESS_DIR: compress
+      TEST_DIR: test
+      COIN_NAME: bitoreum
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
@@ -319,10 +359,9 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
-          mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum ${TEST_DIR}
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
+          cp src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
@@ -337,28 +376,134 @@ jobs:
         run: |
           mkdir -p ${COMPRESS_DIR}
           for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
-            cd $dir
-            echo "sha256:" > checksums.txt
-            echo "------------------------------------" >> checksums.txt
-            shasum * >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
-            echo "openssl-sha256:" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
-            sha256sum * >> checksums.txt
-            cat checksums.txt
             case $dir in
               *debug) suffix="debug" ;;
               *_not_strip) suffix="notstrip" ;;
               *) suffix="release" ;;
             esac
-            tar -cf - . | gzip -9 > ../${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz
-            cd ..
+            # Set up a clean temp staging folder
+            rm -rf temp
+            mkdir -p temp/bitoreum-build
+            # Copy only the desired binaries into the build folder
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
+            # Create checksums for the binaries inside bitoreum-build
+            pushd temp/bitoreum-build
+            echo "sha256:" > checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            echo "openssl-sha256:" >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
+            popd
+            # Compress the bitoreum-build folder with contents
+            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
           done
+          # Move final .tar.gz files into compress dir
           mv *.tar.gz ${COMPRESS_DIR}/
+          # Generate global checksum for all archives
           cd ${COMPRESS_DIR}
+          echo "Checksums for release archives:" > checksums.txt
+          echo "------------------------------------" >> checksums.txt
           for f in *.tar.gz; do
+            echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
+          done
+          cat checksums.txt
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
+          path: ${{ env.COMPRESS_DIR }}
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
+          path: ${{ env.TEST_DIR }}
+
+          
+  build-ubuntu24-arm64:
+    name: Ubuntu 24 ARM64 Build
+    needs: get-version
+    runs-on: ubuntu-24.04
+    env:
+      ARCH_TYPE: arm64
+      OS: ubuntu-24.04
+      BUILD_DIR: build
+      COMPRESS_DIR: compress
+      TEST_DIR: test
+      COIN_NAME: bitoreum
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake g++-aarch64-linux-gnu
+      - name: Build Depends
+        run: |
+          echo "building with $(nproc) threads"
+          make -C depends -j$(nproc) HOST=aarch64-linux-gnu
+      - name: Configure
+        run: |
+          ./autogen.sh
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
+      - name: Build Binaries
+        run: |
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
+          cp src/test/test_bitoreum ${TEST_DIR}
+          strip ${BUILD_DIR}/* || true
+      - name: Build Debug Binaries
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+      - name: Generate Checksum and Compress
+        run: |
+          mkdir -p ${COMPRESS_DIR}
+          for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
+            case $dir in
+              *debug) suffix="debug" ;;
+              *_not_strip) suffix="notstrip" ;;
+              *) suffix="release" ;;
+            esac
+            rm -rf temp
+            mkdir -p temp/bitoreum-build
+            # Copy target binaries
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
+            # Generate checksums inside the folder
+            pushd temp/bitoreum-build
+            echo "sha256:" > checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            echo "openssl-sha256:" >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
+            sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
+            popd
+            # Compress it
+            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
+          done
+          mv *.tar.gz ${COMPRESS_DIR}/
+          # Generate global checksums for release artifacts
+          cd ${COMPRESS_DIR}
+          echo "Checksums for release archives:" > checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          for f in *.tar.gz; do
+            echo "$f" >> checksums.txt
+            echo "sha256: $(shasum $f)" >> checksums.txt
+            echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
+            echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
       - name: Upload Artifacts
@@ -372,87 +517,7 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
-          
-  build-ubuntu24-arm64:
-    name: Ubuntu 24 ARM64 Build
-    needs: get-version
-    runs-on: ubuntu-24.04
-    env:
-      ARCH_TYPE: arm64
-      OS: ubuntu-24.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Required Packages
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake g++-aarch64-linux-gnu
-      - name: Build Depends
-        run: |
-          echo "building with $(nproc) threads"
-          make -C depends -j$(nproc) HOST=aarch64-linux-gnu
-      - name: Configure
-        run: |
-          ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
-      - name: Build Binaries
-        run: |
-          make -j$(nproc)
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
-          mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum ${TEST_DIR}
-          strip ${BUILD_DIR}/* || true
-      - name: Build Debug Binaries
-        run: |
-          make clean
-          make distclean
-          ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --enable-debug
-          make -j$(nproc)
-          mkdir -p ${BUILD_DIR}_debug
-          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
-      - name: Generate Checksum and Compress
-        run: |
-          mkdir -p ${COMPRESS_DIR}
-          for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
-            cd $dir
-            echo "sha256:" > checksums.txt
-            echo "------------------------------------" >> checksums.txt
-            shasum * >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
-            echo "openssl-sha256:" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
-            sha256sum * >> checksums.txt
-            cat checksums.txt
-            case $dir in
-              *debug) suffix="debug" ;;
-              *_not_strip) suffix="notstrip" ;;
-              *) suffix="release" ;;
-            esac
-            tar -cf - . | gzip -9 > ../${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz
-            cd ..
-          done
-          mv *.tar.gz ${COMPRESS_DIR}/
-          cd ${COMPRESS_DIR}
-          for f in *.tar.gz; do
-            echo "sha256: $(shasum $f)" >> checksums.txt
-            echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
-          done
-          cat checksums.txt
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
-
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}  
+  
           
   build-macos-12-x86:
     name: macOS 12 x86 Build
