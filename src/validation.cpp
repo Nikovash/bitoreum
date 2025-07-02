@@ -2253,12 +2253,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             }
             nFees += txfee;
             specialTxFees += specialTxFee;
-            if (!MoneyRange(nFees, isV17active)) {
+            if (!MoneyRange(nFees)) {
                 return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
                                  REJECT_INVALID, "bad-txns-accumulated-fee-outofrange");
             }
 
-            if (!MoneyRange(specialTxFees, isV17active)) {
+            if (!MoneyRange(specialTxFees)) {
                 return state.DoS(100, error("%s: accumulated specialTxFees in the block out of range.", __func__),
                     REJECT_INVALID, "bad-txns-accumulated-specialTxFees-outofrange");
             }
@@ -2444,7 +2444,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             }
         }
     } else if (!fReindex && !fImporting) {
-        LogPrintf("ConnectBlock( B I T O R E U M ): ");
+        // LogPrintf("ConnectBlock( B I T O R E U M ): ");
     }
 
     int64_t nTime5_1 = GetTimeMicros(); nTimeISFilter += nTime5_1 - nTime4;
@@ -2477,6 +2477,15 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     int64_t nTime5 = GetTimeMicros(); nTimeBitoreumSpecific += nTime5 - nTime4;
     LogPrint(BCLog::BENCHMARK, "    - Bitoreum specific: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeBitoreumSpecific * MICRO, nTimeBitoreumSpecific * MILLI / nBlocksTotal);
+
+    FounderPayment founderPayment = chainparams.GetConsensus().nFounderPayment;
+    CAmount founderReward = founderPayment.getFounderPaymentAmount(pindex->nHeight, blockReward);
+    // enforced checks starts from this block
+    int founderStartHeight = 834600;
+    if (pindex->nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward)) {
+        return state.DoS(0, error("ConnectBlock(_B_I_T_O_R_E_U_M_): foundation payment invalid or missing"),
+                                REJECT_INVALID, "bad-cb-founder-payment-invalid");
+    }
 
     // END _B_I_T_O_R_E_U_M_
 
@@ -3742,6 +3751,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
+
+    // this is off by -1 always
     CAmount blockReward = GetBlockSubsidy(1, nHeight - 1, Params().GetConsensus(), false);
     // Check transactions
     for (const auto& tx : block.vtx)
@@ -3999,7 +4010,6 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
         }
         fProcessingHeaders = false;
     }
-    NotifyHeaderTip();
     if (NotifyHeaderTip()) {
         LOCK(cs_main);
         if (IsInitialBlockDownload() && ppindex && *ppindex) {

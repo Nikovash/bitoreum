@@ -21,10 +21,10 @@ CAmount FounderPayment::getFounderPaymentAmount(int blockHeight, CAmount blockRe
 }
 
 void FounderPayment::UpdateFounderAddressForHeight(int blockHeight) {
-    if (blockHeight >= 834000) {
-        founderAddress = "BbS6P1e4NxYc5ttcLz2hWKtVwPPjC7bqZG";
-    } else {
+    if (blockHeight > 834000) {
         founderAddress = DEFAULT_FOUNDER_ADDRESS;
+    } else {
+        founderAddress = "BanxgMPcMpXnuWQ2ogfQqEkwwVtjhAhXBR";
     }
 }
 
@@ -48,7 +48,18 @@ void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHe
     LogPrintf("FounderPayment::FillFounderPayment -- Founder payment %lld to %s\n", founderPayment, founderAddress.c_str());
 }
 
+// this is called with nHeight - 1 always
 bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward) {
+    if (height == 834000) return true;
+    if (height == 834026) return true;
+    if (height == 834365) return true;
+
+    // technically since 834000 - 834600 will be ignored (payments to both new and old addresses, we can just
+    if (height > 834000-1 && height < 834600-1) {
+        LogPrintf("FounderPayment::IsBlockPayeeValid -- payee check disabled for height %d\n", height);
+        return true;
+    }
+
     UpdateFounderAddressForHeight(height);
 
     CScript payee = GetScriptForDestination(DecodeDestination(founderAddress));
