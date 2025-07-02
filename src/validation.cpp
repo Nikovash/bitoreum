@@ -3999,7 +3999,6 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
         }
         fProcessingHeaders = false;
     }
-    NotifyHeaderTip();
     if (NotifyHeaderTip()) {
         LOCK(cs_main);
         if (IsInitialBlockDownload() && ppindex && *ppindex) {
