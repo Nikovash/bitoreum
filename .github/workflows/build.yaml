@@ -4,11 +4,13 @@ on:
   push:
     branches:
       - main
-      - 4.0.0.*
+      - dev
+      - 4.*
   pull_request:
     branches:
       - main
-      - 4.0.0.*
+      - dev
+      - 4.*
   workflow_dispatch:
 
 env:

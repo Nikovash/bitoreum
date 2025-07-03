@@ -50,14 +50,11 @@ void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHe
 
 // this is called with nHeight - 1 always
 bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward) {
-    if (height == 834000) return true;
-    if (height == 834026) return true;
-    if (height == 834365) return true;
-
+    bool skipPayeeCheck = false;
     // technically since 834000 - 834600 will be ignored (payments to both new and old addresses, we can just
-    if (height > 834000-1 && height < 834600-1) {
+    if ((height > 834000-1) && (height < 834600-1)) {
         LogPrintf("FounderPayment::IsBlockPayeeValid -- payee check disabled for height %d\n", height);
-        return true;
+        skipPayeeCheck = true;
     }
 
     UpdateFounderAddressForHeight(height);
@@ -65,7 +62,7 @@ bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int heig
     CScript payee = GetScriptForDestination(DecodeDestination(founderAddress));
     const CAmount founderReward = getFounderPaymentAmount(height, blockReward);
     BOOST_FOREACH(const CTxOut& out, txNew.vout) {
-        if (out.scriptPubKey == payee && out.nValue >= founderReward) {
+        if ((out.scriptPubKey == payee || skipPayeeCheck) && out.nValue >= founderReward) {
             return true;
         }
     }
