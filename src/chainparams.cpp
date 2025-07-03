@@ -544,10 +544,10 @@ public:
 
         // The best chain should have at least this much work.
         //consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000c2a6d13d4138"); // 0
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000afbf9fad2496"); // 824500
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000afd4f619772a"); // 824600
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x90b619df13b18a61dd37808f9557e5692283a1906134587bd176767d54167bf0"); // 824500
+        consensus.defaultAssumeValid = uint256S("0x0a4ade7b4074427df0eaf72e970cfc6c89a7492a3a73213fa622cb992ac03073"); // 834600
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -630,14 +630,16 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
-        vSporkAddresses = {"BanxgMPcMpXnuWQ2ogfQqEkwwVtjhAhXBR",};
+        vSporkAddresses = {"Bo3hXk1d5mgu1dfUjwPj5FvWXA4JGNBQqc",};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
         checkpointData = {
             {   
                 { 0,      uint256S("0x3f590e1339dfd2a738315700c2d9d0b44075d27fb488d4846283d3d65e462e03") },
-                { 824500, uint256S("0x90b619df13b18a61dd37808f9557e5692283a1906134587bd176767d54167bf0") }
+                { 824500, uint256S("0x90b619df13b18a61dd37808f9557e5692283a1906134587bd176767d54167bf0") },
+                { 834599, uint256S("0x6f1769ffbdc1b836cd69b0961db50228007326d09a67713a31f7185494b15d18") },
+                { 834600, uint256S("0x0a4ade7b4074427df0eaf72e970cfc6c89a7492a3a73213fa622cb992ac03073") },
             }
         };
 
