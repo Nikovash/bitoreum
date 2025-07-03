@@ -6,11 +6,13 @@ on:
       - main
       - dev
       - 4.*
+      - 3.*
   pull_request:
     branches:
       - main
       - dev
       - 4.*
+      - 3.*
   workflow_dispatch:
 
 env:
