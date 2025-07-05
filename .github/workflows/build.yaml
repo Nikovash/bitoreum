@@ -38,8 +38,8 @@ jobs:
       - name: Generate Version Logic
         id: selected-version
         run: |
-          VERSION="${GITHUB_REF_NAME}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(grep '^release-version=' build.properties | cut -d'=' -f2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "BUILD_VERSION=$VERSION" > version.txt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -61,6 +61,7 @@ jobs:
       COMPRESS_DIR: compress
       TEST_DIR: test
       COIN_NAME: bitoreum
+      RELEASE_DIR: bitoreum-v${{ needs.get-version.outputs.version }}
 
     steps:
       - name: Checkout
@@ -94,42 +95,40 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
-      - name: Generate Checksum and Compress
+      - name: Organize Artifacts
         run: |
-          mkdir -p ${COMPRESS_DIR}
+          mkdir -p ${RELEASE_DIR}
           for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
             case $dir in
               *debug) suffix="debug" ;;
               *_not_strip) suffix="notstrip" ;;
               *) suffix="release" ;;
             esac
-            rm -rf temp
-            mkdir -p temp/bitoreum-build
-            # Copy binaries into build folder
-            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
-            # Generate checksums inside the build folder
-            pushd temp/bitoreum-build
+            target="${RELEASE_DIR}/${suffix}"
+            mkdir -p "$target"
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx "$target/"
+            pushd "$target"
             echo "sha256:" > checksums.txt
-            echo "------------------------------------" >> checksums.txt
             shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             echo "openssl-sha256:" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
             popd
-            # Compress into tarball with structured name
-            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
           done
+      - name: Compress Artifacts
+        run: |
+          mkdir -p ${COMPRESS_DIR}
+          pushd $(dirname ${RELEASE_DIR})
+          rel_dir=$(basename ${RELEASE_DIR})
+          for suffix in release debug notstrip; do
+            tar -czf ../${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz ${rel_dir}/${suffix}
+          done
+          popd
           mv *.tar.gz ${COMPRESS_DIR}/
-          # Global checksums for tarballs
           cd ${COMPRESS_DIR}
-          echo "Checksums for release archives:" > checksums.txt
-          echo "------------------------------------" >> checksums.txt
           for f in *.tar.gz; do
             echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
       - name: Upload Artifacts
@@ -155,6 +154,7 @@ jobs:
       COMPRESS_DIR: compress
       TEST_DIR: test
       COIN_NAME: bitoreum
+      RELEASE_DIR: bitoreum-v${{ needs.get-version.outputs.version }}
 
     steps:
       - name: Checkout
@@ -188,38 +188,40 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
-      - name: Generate Checksum and Compress
+      - name: Organize Artifacts
         run: |
-          mkdir -p ${COMPRESS_DIR}
+          mkdir -p ${RELEASE_DIR}
           for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
             case $dir in
               *debug) suffix="debug" ;;
               *_not_strip) suffix="notstrip" ;;
               *) suffix="release" ;;
             esac
-            rm -rf temp
-            mkdir -p temp/bitoreum-build
-            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
-            pushd temp/bitoreum-build
+            target="${RELEASE_DIR}/${suffix}"
+            mkdir -p "$target"
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx "$target/"
+            pushd "$target"
             echo "sha256:" > checksums.txt
-            echo "------------------------------------" >> checksums.txt
             shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             echo "openssl-sha256:" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
             popd
-            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
           done
+      - name: Compress Artifacts
+        run: |
+          mkdir -p ${COMPRESS_DIR}
+          pushd $(dirname ${RELEASE_DIR})
+          rel_dir=$(basename ${RELEASE_DIR})
+          for suffix in release debug notstrip; do
+            tar -czf ../${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz ${rel_dir}/${suffix}
+          done
+          popd
           mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
-          echo "Checksums for release archives:" > checksums.txt
-          echo "------------------------------------" >> checksums.txt
           for f in *.tar.gz; do
             echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
       - name: Upload Artifacts
@@ -240,6 +242,7 @@ jobs:
     env:
       ARCH_TYPE: x86
       OS: win64
+      RELEASE_DIR: bitoreum-v${{ needs.get-version.outputs.version }}
 
     steps:
       - name: Checkout
@@ -277,25 +280,33 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_debug/
-      - name: Generate Checksum and Compress
+      - name: Organize Artifacts
+        run: |
+          mkdir -p ${RELEASE_DIR}/release ${RELEASE_DIR}/notstrip ${RELEASE_DIR}/debug
+          cp ${BUILD_DIR}/*.exe ${RELEASE_DIR}/release/
+          cp ${BUILD_DIR}_not_strip/*.exe ${RELEASE_DIR}/notstrip/
+          cp ${BUILD_DIR}_debug/*.exe ${RELEASE_DIR}/debug/
+          for d in release notstrip debug; do
+            pushd ${RELEASE_DIR}/$d
+            echo "sha256:" > checksums.txt
+            shasum *.exe >> checksums.txt
+            echo "openssl-sha256:" >> checksums.txt
+            sha256sum *.exe >> checksums.txt
+            popd
+          done
+      - name: Compress Artifacts
         run: |
           mkdir -p ${COMPRESS_DIR}
-          cd ${BUILD_DIR}
-          echo "sha256:" > checksums.txt
-          shasum * >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          sha256sum * >> checksums.txt
-          zip -r ../${COIN_NAME}-${OS}-${ARCH_TYPE}-release-${{ needs.get-version.outputs.version }}.zip .
-          cd ../${BUILD_DIR}_not_strip
-          echo "sha256:" > checksums.txt
-          shasum * >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          sha256sum * >> checksums.txt
-          zip -r ../${COIN_NAME}-${OS}-${ARCH_TYPE}-notstrip-${{ needs.get-version.outputs.version }}.zip .
-          cd ..
+          pushd $(dirname ${RELEASE_DIR})
+          rel_dir=$(basename ${RELEASE_DIR})
+          for d in release notstrip debug; do
+            zip -r ../${COIN_NAME}-${OS}-${ARCH_TYPE}-${d}-${{ needs.get-version.outputs.version }}.zip ${rel_dir}/$d
+          done
+          popd
           mv *.zip ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
           for f in *.zip; do
+            echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
@@ -324,6 +335,9 @@ jobs:
           echo "sha256: $(shasum $final)" >> checksums.txt
           echo "openssl-sha256: $(sha256sum $final)" >> checksums.txt
           cat checksums.txt
+          mkdir -p ../${RELEASE_DIR}/installer
+          cp "$final" ../${RELEASE_DIR}/installer/
+          cp checksums.txt ../${RELEASE_DIR}/installer/
       - name: Upload Win64 Installation File
         uses: actions/upload-artifact@v4
         with:
@@ -341,6 +355,7 @@ jobs:
       COMPRESS_DIR: compress
       TEST_DIR: test
       COIN_NAME: bitoreum
+      RELEASE_DIR: bitoreum-v${{ needs.get-version.outputs.version }}
 
     steps:
       - name: Checkout
@@ -374,44 +389,40 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
-      - name: Generate Checksum and Compress
+      - name: Organize Artifacts
         run: |
-          mkdir -p ${COMPRESS_DIR}
+          mkdir -p ${RELEASE_DIR}
           for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
             case $dir in
               *debug) suffix="debug" ;;
               *_not_strip) suffix="notstrip" ;;
               *) suffix="release" ;;
             esac
-            # Set up a clean temp staging folder
-            rm -rf temp
-            mkdir -p temp/bitoreum-build
-            # Copy only the desired binaries into the build folder
-            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
-            # Create checksums for the binaries inside bitoreum-build
-            pushd temp/bitoreum-build
+            target="${RELEASE_DIR}/${suffix}"
+            mkdir -p "$target"
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx "$target/"
+            pushd "$target"
             echo "sha256:" > checksums.txt
-            echo "------------------------------------" >> checksums.txt
             shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             echo "openssl-sha256:" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
             popd
-            # Compress the bitoreum-build folder with contents
-            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
           done
-          # Move final .tar.gz files into compress dir
+      - name: Compress Artifacts
+        run: |
+          mkdir -p ${COMPRESS_DIR}
+          pushd $(dirname ${RELEASE_DIR})
+          rel_dir=$(basename ${RELEASE_DIR})
+          for suffix in release debug notstrip; do
+            tar -czf ../${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz ${rel_dir}/${suffix}
+          done
+          popd
           mv *.tar.gz ${COMPRESS_DIR}/
-          # Generate global checksum for all archives
           cd ${COMPRESS_DIR}
-          echo "Checksums for release archives:" > checksums.txt
-          echo "------------------------------------" >> checksums.txt
           for f in *.tar.gz; do
             echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
       - name: Upload Artifacts
@@ -437,6 +448,7 @@ jobs:
       COMPRESS_DIR: compress
       TEST_DIR: test
       COIN_NAME: bitoreum
+      RELEASE_DIR: bitoreum-v${{ needs.get-version.outputs.version }}
 
     steps:
       - name: Checkout
@@ -470,42 +482,40 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
-      - name: Generate Checksum and Compress
+      - name: Organize Artifacts
         run: |
-          mkdir -p ${COMPRESS_DIR}
+          mkdir -p ${RELEASE_DIR}
           for dir in "${BUILD_DIR}" "${BUILD_DIR}_debug" "${BUILD_DIR}_not_strip"; do
             case $dir in
               *debug) suffix="debug" ;;
               *_not_strip) suffix="notstrip" ;;
               *) suffix="release" ;;
             esac
-            rm -rf temp
-            mkdir -p temp/bitoreum-build
-            # Copy target binaries
-            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx temp/bitoreum-build/
-            # Generate checksums inside the folder
-            pushd temp/bitoreum-build
+            target="${RELEASE_DIR}/${suffix}"
+            mkdir -p "$target"
+            cp $dir/bitoreum-cli $dir/bitoreumd $dir/bitoreum-qt $dir/bitoreum-tx "$target/"
+            pushd "$target"
             echo "sha256:" > checksums.txt
-            echo "------------------------------------" >> checksums.txt
             shasum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             echo "openssl-sha256:" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
             sha256sum bitoreum-cli bitoreumd bitoreum-qt bitoreum-tx >> checksums.txt
             popd
-            # Compress it
-            tar -czf ${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz -C temp bitoreum-build
           done
+      - name: Compress Artifacts
+        run: |
+          mkdir -p ${COMPRESS_DIR}
+          pushd $(dirname ${RELEASE_DIR})
+          rel_dir=$(basename ${RELEASE_DIR})
+          for suffix in release debug notstrip; do
+            tar -czf ../${COIN_NAME}-${OS}-${ARCH_TYPE}-${suffix}-${{ needs.get-version.outputs.version }}.tar.gz ${rel_dir}/${suffix}
+          done
+          popd
           mv *.tar.gz ${COMPRESS_DIR}/
-          # Generate global checksums for release artifacts
           cd ${COMPRESS_DIR}
-          echo "Checksums for release archives:" > checksums.txt
-          echo "------------------------------------" >> checksums.txt
           for f in *.tar.gz; do
             echo "$f" >> checksums.txt
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
-            echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
       - name: Upload Artifacts
@@ -524,6 +534,9 @@ jobs:
     name: macOS 13 x86 Build
     needs: get-version
     runs-on: macos-13
+
+    env:
+      RELEASE_DIR: bitoreum-v${{ needs.get-version.outputs.version }}
 
     steps:
       - name: Checkout
@@ -554,39 +567,36 @@ jobs:
           mv src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/*
 
-      - name: Generate Checksum and Compress
+      - name: Organize Artifacts
         run: |
-          cd ${BUILD_DIR}
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz ../${BUILD_DIR}/*
-          cd ../${BUILD_DIR}_not_strip
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
-          cd ..
+          mkdir -p ${RELEASE_DIR}/release ${RELEASE_DIR}/notstrip
+          cp ${BUILD_DIR}/* ${RELEASE_DIR}/release/
+          cp ${BUILD_DIR}_not_strip/* ${RELEASE_DIR}/notstrip/
+          for d in release notstrip; do
+            pushd ${RELEASE_DIR}/$d
+            echo "sha256:" > checksums.txt
+            shasum * >> checksums.txt
+            echo "openssl-sha256:" >> checksums.txt
+            openssl sha256 * >> checksums.txt
+            popd
+          done
+      - name: Compress Artifacts
+        run: |
           mkdir -p ${COMPRESS_DIR}
+          pushd $(dirname ${RELEASE_DIR})
+          rel_dir=$(basename ${RELEASE_DIR})
+          for d in release notstrip; do
+            tar -czf ../${COIN_NAME}-macOS13-x86-${d}-${{ needs.get-version.outputs.version }}.tar.gz ${rel_dir}/$d
+          done
+          popd
           mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
-          echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
+          for f in *.tar.gz; do
+            echo "$f" >> checksums.txt
+            echo "sha256: $(shasum $f)" >> checksums.txt
+            echo "openssl-sha256: $(openssl sha256 $f | awk '{print $2}')" >> checksums.txt
+          done
           cat checksums.txt
-          cd ..
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
