@@ -5,11 +5,13 @@ on:
     branches:
       - main
       - dev
+      - Codex
       - 4.0.*
   pull_request:
     branches:
       - main
       - dev
+      - Codex
       - 4.0.*
   workflow_dispatch:
 
@@ -131,17 +133,17 @@ jobs:
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
           cat checksums.txt
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
+          path: ${{ env.RELEASE_DIR }}
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
-
 
   build-ubuntu22-x86:
     name: Ubuntu 22 x86 Build
@@ -224,11 +226,12 @@ jobs:
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
           cat checksums.txt
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
+          path: ${{ env.RELEASE_DIR }}
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -310,12 +313,11 @@ jobs:
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
-          cat checksums.txt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
+          path: ${{ env.RELEASE_DIR }}
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
@@ -424,18 +426,16 @@ jobs:
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
-          cat checksums.txt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
+          path: ${{ env.RELEASE_DIR }}
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
-
           
   build-ubuntu24-arm64:
     name: Ubuntu 24 ARM64 Build
@@ -517,12 +517,12 @@ jobs:
             echo "sha256: $(shasum $f)" >> checksums.txt
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
-          cat checksums.txt
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
+          path: ${{ env.RELEASE_DIR }}
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
@@ -601,7 +601,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-macOS13-x86-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
+          path: ${{ env.RELEASE_DIR }}
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v4
