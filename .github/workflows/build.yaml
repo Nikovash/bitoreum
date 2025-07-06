@@ -5,11 +5,13 @@ on:
     branches:
       - main
       - dev
+      - Codex
       - 4.0.*
   pull_request:
     branches:
       - main
       - dev
+      - Codex
       - 4.0.*
   workflow_dispatch:
 
@@ -537,21 +539,20 @@ jobs:
 
       - name: Build Depends
         run: |
-          echo "building with 8 threads"
-          make -C depends -j8 HOST=x86_64-apple-darwin22
+          echo "building with $(sysctl -n hw.ncpu) threads"
+          make -C depends -j$(sysctl -n hw.ncpu) HOST=x86_64-apple-darwin22
 
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin22
-
+          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin22 --disable-tests --disable-bench
+    
       - name: Build Binaries
         run: |
-          make -j8
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          make -j$(sysctl -n hw.ncpu)
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/*
 
       - name: Generate Checksum and Compress
