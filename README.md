@@ -47,4 +47,4 @@ The Travis CI system makes sure that every pull request is built for Windows, Li
 
 Manual Quality Assurance (QA) Testing Changes should be tested by somebody other than the developer who wrote the code. This is especially important for large or high-risk changes. It is useful to add a test plan to the pull request description if testing the changes is not straightforward.
 
-Dont drink & Code
+Dont drink & Code, but do it to it
