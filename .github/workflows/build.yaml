@@ -19,7 +19,6 @@ env:
   COIN_NAME: bitoreum
   BUILD_DIR: bitoreum-build
   COMPRESS_DIR: bitoreum-compress
-  TEST_DIR: bitoreum-test
 
 permissions:
   contents: read
@@ -61,7 +60,6 @@ jobs:
       OS: ubuntu-24.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
@@ -138,11 +136,6 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
 
 
   build-ubuntu22-x86:
@@ -154,7 +147,6 @@ jobs:
       OS: ubuntu-22.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
@@ -227,11 +219,6 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
 
   build-win64:
     name: Win64 x86 Build
@@ -305,11 +292,6 @@ jobs:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
 
       - name: Generate Windows Installation File
         run: |
@@ -338,7 +320,6 @@ jobs:
       OS: ubuntu-22.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
@@ -417,11 +398,7 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
+
 
           
   build-ubuntu24-arm64:
@@ -433,7 +410,6 @@ jobs:
       OS: ubuntu-24.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
@@ -511,11 +487,7 @@ jobs:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
+
           
   build-macos-13-x86:
     name: macOS 13 x86 Build
@@ -589,11 +561,7 @@ jobs:
           name: ${{ env.COIN_NAME }}-macOS13-x86-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-macOS13-x86-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
+
 
       - name: Generate Macos dmg files
         run: |
