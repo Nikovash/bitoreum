@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
-#ifndef _B_I_T_O_R_E_U_M__HDCHAIN_H
-#define _B_I_T_O_R_E_U_M__HDCHAIN_H
+#ifndef RAPTOREUM_HDCHAIN_H
+#define RAPTOREUM_HDCHAIN_H
 
 #include <key.h>
 #include <sync.h>
@@ -148,4 +148,4 @@ public:
     std::string GetKeyPath() const;
 };
 
-#endif // _B_I_T_O_R_E_U_M__HDCHAIN_H
+#endif // RAPTOREUM_HDCHAIN_H

@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 The Bitoreum Core developers
+/* Copyright (c) 2020 The Raptoreum Core developers
  * Distributed under the MIT software license, see the accompanying
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  *
@@ -8,8 +8,8 @@
  *      Author: tri
  */
 
-#ifndef _B_I_T_O_R_E_U_M__SELECTION_H_
-#define _B_I_T_O_R_E_U_M__SELECTION_H_
+#ifndef RAPTOREUM_SELECTION_H_
+#define RAPTOREUM_SELECTION_H_
 
 #include <uint256.h>
 #include <string>
@@ -90,4 +90,4 @@ protected:
 
 };
 
-#endif /* _B_I_T_O_R_E_U_M__SELECTION_H_ */
+#endif /* RAPTOREUM_SELECTION_H_ */

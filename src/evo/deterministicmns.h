@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2020 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _B_I_T_O_R_E_U_M__DETERMINISTICMNS_H
-#define _B_I_T_O_R_E_U_M__DETERMINISTICMNS_H
+#ifndef RAPTOREUM_DETERMINISTICMNS_H
+#define RAPTOREUM_DETERMINISTICMNS_H
 
 #include <arith_uint256.h>
 #include <bls/bls.h>
@@ -48,6 +48,8 @@ public:
     // sha256(proTxHash, confirmedHash) to speed up quorum calculations
     // please note that this is NOT a double-sha256 hash
     uint256 confirmedHashWithProRegTxHash;
+    // collateral amount used in quorum calculations
+    CAmount nCollateralAmount;
 
     CKeyID keyIDOwner;
     CBLSLazyPublicKey pubKeyOperator;
@@ -91,6 +93,7 @@ public:
         READWRITE(addr);
         READWRITE(scriptPayout);
         READWRITE(scriptOperatorPayout);
+        READWRITE(nCollateralAmount);
     }
 
     void ResetOperatorFields()
@@ -154,6 +157,7 @@ public:
         Field_addr                              = 0x0800,
         Field_scriptPayout                      = 0x1000,
         Field_scriptOperatorPayout              = 0x2000,
+        Field_nCollateralAmount                 = 0x4000,
     };
 
 #define DMN_STATE_DIFF_ALL_FIELDS \
@@ -170,7 +174,8 @@ public:
     DMN_STATE_DIFF_LINE(keyIDVoting) \
     DMN_STATE_DIFF_LINE(addr) \
     DMN_STATE_DIFF_LINE(scriptPayout) \
-    DMN_STATE_DIFF_LINE(scriptOperatorPayout)
+    DMN_STATE_DIFF_LINE(scriptOperatorPayout) \
+    DMN_STATE_DIFF_LINE(nCollateralAmount)
 
 public:
     uint32_t fields{0};
@@ -723,4 +728,4 @@ private:
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
-#endif //_B_I_T_O_R_E_U_M__DETERMINISTICMNS_H
+#endif //RAPTOREUM_DETERMINISTICMNS_H

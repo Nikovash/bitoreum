@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,6 +54,10 @@
 #include <miniupnpc/miniwget.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
+#endif
+
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
 #endif
 
 #include <unordered_map>
@@ -824,6 +828,11 @@ void CNode::copyStats(CNodeStats &stats)
         X(verifiedPubKeyHash);
     }
     X(m_smartnode_connection);
+
+    X(addrTokenTimestamp);
+    X(addrTokenBucket);
+    X(nAddrRateLimited);
+    X(nAddrProcessed);
 }
 #undef X
 
@@ -1106,7 +1115,7 @@ bool CConnman::AttemptToEvictConnection()
                 }
                 // if MNAUTH was valid, the node is always protected (and at the same time not accounted when
                 // checking incoming connection limits)
-                if (!node->verifiedProRegTxHash.IsNull()) {
+                if (!node->GetVerifiedProRegTxHash().IsNull()) {
                     isProtected = true;
                 }
                 if (isProtected) {
@@ -1196,7 +1205,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         for (const CNode* pnode : vNodes) {
             if (pnode->fInbound) {
                 nInbound++;
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
+                if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
                     nVerifiedInboundSmartnodes++;
                 }
             }
@@ -1342,10 +1351,10 @@ void CConnman::DisconnectNodes()
                 }
 
                 if (fLogIPs) {
-                    LogPrintf("Ping Pong -- Network update: peer=%d addr=%s nRefCount=%d fInbound=%d m_smartnode_connection=%d m_smartnode_iqr_connection=%d\n",
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d m_smartnode_connection=%d m_smartnode_iqr_connection=%d\n",
                           pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->m_smartnode_connection, pnode->m_smartnode_iqr_connection);
                 } else {
-                    LogPrintf("Pong Ping -- Network update: peer=%d nRefCount=%d fInbound=%d m_smartnode_connection=%d m_smartnode_iqr_connection=%d\n",
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d m_smartnode_connection=%d m_smartnode_iqr_connection=%d\n",
                           pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->m_smartnode_connection, pnode->m_smartnode_iqr_connection);
                 }
 
@@ -2210,7 +2219,7 @@ void CConnman::ThreadDNSAddressSeed()
             nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->m_smartnode_probe_connection;
         }
         if (nRelevant >= 2) {
-            LogPrintf("P2P available, Yey I don't need DNS seeding.\n");
+            LogPrintf("P2P peers available. Skipped DNS seeding.\n");
             return;
         }
     }
@@ -2417,8 +2426,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodes) {
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    setConnectedSmartnodes.emplace(pnode->verifiedProRegTxHash);
+                auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+                if (!verifiedProRegTxHash.IsNull()) {
+                    setConnectedSmartnodes.emplace(verifiedProRegTxHash);
                 }
             }
         }
@@ -2635,9 +2645,10 @@ void CConnman::ThreadOpenSmartnodeConnections()
         std::set<CService> connectedNodes;
         std::map<uint256, bool> connectedProRegTxHashes;
         ForEachNode([&](const CNode* pnode) {
+            auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
             connectedNodes.emplace(pnode->addr);
-            if (!pnode->verifiedProRegTxHash.IsNull()) {
-                connectedProRegTxHashes.emplace(pnode->verifiedProRegTxHash, pnode->fInbound);
+            if (!verifiedProRegTxHash.IsNull()) {
+                connectedProRegTxHashes.emplace(verifiedProRegTxHash, pnode->fInbound);
             }
         });
         auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -2827,7 +2838,9 @@ void CConnman::OpenSmartnodeConnection(const CAddress &addrConnect, bool probe) 
 void CConnman::ThreadMessageHandler()
 {
     int64_t nLastSendMessagesTimeSmartnodes = 0;
-
+#ifdef ENABLE_WALLET
+    bool syncComplete = false;
+#endif
     while (!flagInterruptMsgProc)
     {
         std::vector<CNode*> vNodesCopy = CopyNodeVector();
@@ -2839,6 +2852,16 @@ void CConnman::ThreadMessageHandler()
             fSkipSendMessagesForSmartnodes = false;
             nLastSendMessagesTimeSmartnodes = GetTimeMillis();
         }
+
+#ifdef ENABLE_WALLET
+        if (!syncComplete && smartnodeSync.IsSynced()) {
+            // Re-lock after blockchain sync, to capture all new collateral Txes:xxx
+            for (const auto pwallet : GetWallets()) {
+                pwallet->AutoLockSmartnodeCollaterals();
+            }
+            syncComplete = true;
+        }
+#endif
 
         for (CNode* pnode : vNodesCopy)
         {
@@ -2918,7 +2941,7 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to %s on this computer. %s is allready started."), addrBind.ToString(), _(PACKAGE_NAME));
+            strError = strprintf(_("Unable to bind to %s on this computer. %s is probably already running."), addrBind.ToString(), _(PACKAGE_NAME));
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
@@ -3514,7 +3537,8 @@ void CConnman::SetSmartnodeQuorumRelayMembers(Consensus::LLMQType llmqType, cons
 
     // Update existing connections
     ForEachNode([&](CNode* pnode) {
-        if (!pnode->verifiedProRegTxHash.IsNull() && !pnode->m_smartnode_iqr_connection && IsSmartnodeQuorumRelayMember(pnode->verifiedProRegTxHash)) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (!verifiedProRegTxHash.IsNull() && !pnode->m_smartnode_iqr_connection && IsSmartnodeQuorumRelayMember(verifiedProRegTxHash)) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
@@ -3559,7 +3583,8 @@ std::set<NodeId> CConnman::GetSmartnodeQuorumNodes(Consensus::LLMQType llmqType,
         if (pnode->fDisconnect) {
             continue;
         }
-        if (!pnode->qwatch && (pnode->verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(pnode->verifiedProRegTxHash))) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (!pnode->qwatch && (verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(verifiedProRegTxHash))) {
             continue;
         }
         nodes.emplace(pnode->GetId());
@@ -3579,7 +3604,7 @@ bool CConnman::IsSmartnodeQuorumNode(const CNode* pnode)
     // Let's see if this is an outgoing connection to an address that is known to be a smartnode
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
-    if (pnode->verifiedProRegTxHash.IsNull() && !pnode->fInbound) {
+    if (pnode->GetVerifiedProRegTxHash().IsNull() && !pnode->fInbound) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
@@ -3591,8 +3616,8 @@ bool CConnman::IsSmartnodeQuorumNode(const CNode* pnode)
 
     LOCK(cs_vPendingSmartnodes);
     for (const auto& p : smartnodeQuorumNodes) {
-        if (!pnode->verifiedProRegTxHash.IsNull()) {
-            if (p.second.count(pnode->verifiedProRegTxHash)) {
+        if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
+            if (p.second.count(pnode->GetVerifiedProRegTxHash())) {
                 return true;
             }
         } else if (!assumedProTxHash.IsNull()) {

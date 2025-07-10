@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -81,7 +81,7 @@ CAmount ParsePaymentAmount(const std::string& strAmount)
         ostr << "ParsePaymentAmount: ParseFixedPoint failed for string: " << strAmount;
         throw std::runtime_error(ostr.str());
     }
-    if (!MoneyRange(nAmount, Params().IsFutureActive(chainActive.Tip()))) {
+    if (!MoneyRange(nAmount)) {
         nAmount = 0;
         std::ostringstream ostr;
         ostr << "ParsePaymentAmount: Invalid amount string, value outside of valid money range";
@@ -349,7 +349,7 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
             CTxDestination dest;
             ExtractDestination(payment.script, dest);
 
-            // TODO: PRINT NICE N.N _B_I_T_O_R_E_U_M_ OUTPUT
+            // TODO: PRINT NICE N.N RAPTOREUM OUTPUT
 
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
                         i, EncodeDestination(dest), payment.nAmount);

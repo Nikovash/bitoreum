@@ -1,5 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -782,7 +782,7 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
 
 bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
 {
-    if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
+    if (!fSmartnodeMode || WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash.IsNull())) {
         return false;
     }
 
@@ -803,7 +803,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         return false;
     }
 
-    if (!quorum->IsValidMember(activeSmartnodeInfo.proTxHash)) {
+    if (!WITH_LOCK(activeSmartnodeInfoCs, return quorum->IsValidMember(activeSmartnodeInfo.proTxHash))) {
         return false;
     }
 

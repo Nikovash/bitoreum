@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -245,11 +245,15 @@ UniValue smartnode_status(const JSONRPCRequest& request)
 
     UniValue mnObj(UniValue::VOBJ);
 
-    // keep compatibility with legacy status for now (might get deprecated/removed later)
-    mnObj.pushKV("outpoint", activeSmartnodeInfo.outpoint.ToStringShort());
-    mnObj.pushKV("service", activeSmartnodeInfo.service.ToString());
+    CDeterministicMNCPtr dmn;
+    {
+        LOCK(activeSmartnodeInfoCs);
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);
+        // keep compatibility with legacy status for now (might get deprecated/removed later)
+        mnObj.pushKV("outpoint", activeSmartnodeInfo.outpoint.ToStringShort());
+        mnObj.pushKV("service", activeSmartnodeInfo.service.ToString());
+        dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);
+    }
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
@@ -667,6 +671,7 @@ UniValue smartnodelist(const JSONRPCRequest& request)
             objMN.pushKV("votingaddress", EncodeDestination(dmn->pdmnState->keyIDVoting));
             objMN.pushKV("collateraladdress", collateralAddressStr);
             objMN.pushKV("pubkeyoperator", dmn->pdmnState->pubKeyOperator.Get().ToString());
+            objMN.pushKV("posepenalty", dmn->pdmnState->nPoSePenalty);
             obj.pushKV(strOutpoint, objMN);
         } else if (strMode == "lastpaidblock") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;

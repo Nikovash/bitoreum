@@ -1,7 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -472,18 +472,6 @@ static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
-    
-    if(!Params().IsFutureActive(chainActive.Tip())){ 
-        CAmount subtotal = nValue;
-        if (nChangePosRet >= 0)
-            subtotal += tx.get()->vout.at(nChangePosRet).nValue;
-        if(!fSubtractFeeFromAmount)
-            subtotal += nFeeRequired;
-        if (subtotal > OLD_MAX_MONEY){
-            strError = "Error: This transaction exceeds the limit of 21 million.";
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-        }
     }
 
     CValidationState state;
@@ -1384,10 +1372,6 @@ UniValue sendmany(const JSONRPCRequest& request)
     std::string strFailReason;
     CTransactionRef tx;
     bool fCreated = pwallet->CreateTransaction(vecSend, tx, keyChange, nFeeRequired, nChangePosRet, strFailReason, coin_control);
-    if(!Params().IsFutureActive(chainActive.Tip()) && fCreated){ 
-        if (tx.get()->GetValueOut() > OLD_MAX_MONEY)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error: This transaction exceeds the limit of 21 million.");
-    }
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;

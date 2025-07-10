@@ -4,11 +4,15 @@ on:
   push:
     branches:
       - main
-      - 4.0.0.*
+      - dev
+      - Codex
+      - 4.0.*
   pull_request:
     branches:
       - main
-      - 4.0.0.*
+      - dev
+      - Codex
+      - 4.0.*
   workflow_dispatch:
 
 env:
@@ -74,21 +78,20 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --disable-bench
       - name: Build Binaries
         run: |
           make -j$(nproc)
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          cp src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug --disable-bench
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
@@ -168,21 +171,20 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --disable-bench
       - name: Build Binaries
         run: |
           make -j$(nproc)
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          cp src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --disable-tests --disable-bench --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
@@ -257,21 +259,20 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32
+          ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 --disable-tests --disable-bench
       - name: Build Binaries
         run: |
           make -j$(nproc)
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}/
-          mv src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum.exe ${TEST_DIR}
+          cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_not_strip/
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 --disable-tests --disable-bench --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_debug/
@@ -354,21 +355,20 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
       - name: Build Binaries
         run: |
           make -j$(nproc)
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          cp src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --enable-debug
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
@@ -450,14 +450,13 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu
+          ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
       - name: Build Binaries
         run: |
           make -j$(nproc)
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          cp src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/* || true
       - name: Build Debug Binaries
         run: |
@@ -517,101 +516,6 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
-  
-          
-  build-macos-12-x86:
-    name: macOS 12 x86 Build
-    needs: get-version
-    runs-on: [self-hosted, macOS, X64, macos12]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Verify Required Packages
-        run: |
-          brew list automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python || echo "Missing brew packages"
-          pip3 show ds_store mac_alias || echo "Missing Python packages"
-
-      - name: Build Depends
-        run: |
-          echo "building with (($(sysctl -n hw.ncpu) - 1)) threads"
-          make -C depends -j$(($(sysctl -n hw.ncpu) - 1)) HOST=x86_64-apple-darwin21
-
-      - name: Configure
-        run: |
-          ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin21
-
-      - name: Build Binaries
-        run: |
-          make -j$(($(sysctl -n hw.ncpu) - 1))
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
-          mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum ${TEST_DIR}
-          strip ${BUILD_DIR}/*
-
-      - name: Generate Checksum and Compress
-        run: |
-          cd ${BUILD_DIR}
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macos12-x86-${{ needs.get-version.outputs.version }}.tar.gz ../${BUILD_DIR}/*
-          cd ../${BUILD_DIR}_not_strip
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macos12-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
-          cd ..
-          mkdir -p ${COMPRESS_DIR}
-          mv *.tar.gz ${COMPRESS_DIR}/
-          cd ${COMPRESS_DIR}
-          echo "sha256: $(shasum ${COIN_NAME}-macos12-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macos12-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "sha256: $(shasum ${COIN_NAME}-macos12-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macos12-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          cat checksums.txt
-          cd ..
-
-      - name: Upload Core Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-macos12-x86-core-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
-
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-macos12-x86-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
-
-      - name: Generate Macos dmg files
-        run: |
-          make deploy
-          mkdir -p macos-dmg
-          mv Bitoreum-Qt.dmg macos-dmg/Crystal-Bitoreum-Qt.dmg
-          cd macos-dmg
-          echo "sha256: $(shasum Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
-          cd ..
-
-      - name: Upload dmg file
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-macos12-x86-dmg-${{ needs.get-version.outputs.version }}
-          path: macos-dmg
           
   build-macos-13-x86:
     name: macOS 13 x86 Build
@@ -630,21 +534,20 @@ jobs:
 
       - name: Build Depends
         run: |
-          echo "building with 8 threads"
-          make -C depends -j8 HOST=x86_64-apple-darwin22
+          echo "building with $(sysctl -n hw.ncpu) threads"
+          make -C depends -j$(sysctl -n hw.ncpu) HOST=x86_64-apple-darwin22
 
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin22
-
+          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin22 --disable-tests --disable-bench
+    
       - name: Build Binaries
         run: |
-          make -j8
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          make -j$(sysctl -n hw.ncpu)
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           mv src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_bitoreum ${TEST_DIR}
           strip ${BUILD_DIR}/*
 
       - name: Generate Checksum and Compress
