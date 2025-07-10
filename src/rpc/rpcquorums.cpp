@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -183,19 +183,25 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     LOCK(cs_main);
     int tipHeight = chainActive.Height();
 
+    auto proTxHash = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash);
     UniValue minableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
     for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(chainActive.Tip())) {
         const auto& params = llmq::GetLLMQParams(type);
 
         if (fSmartnodeMode) {
-            const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, true);
+            const CBlockIndex* pindexQuorum;
+            {
+                LOCK(cs_main);
+                pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
+            }
+            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, proTxHash, false);
+            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             g_connman->ForEachNode([&](const CNode* pnode) {
-                if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {
-                    foundConnections.emplace(pnode->verifiedProRegTxHash, pnode->addr);
+                auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+                if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
+                    foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
                 }
             });
             UniValue arr(UniValue::VARR);

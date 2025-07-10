@@ -1,8 +1,9 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
-// Copyright (c) 2024-2025 The Cystal Bitoreum Developers
+// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2022 The Bitoreum developers
+// Copyright (c) 2025 The Cystal Bitoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -114,6 +115,13 @@ void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64
 //    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
 //}
 
+void CChainParams::UpdateBIP66Parameters(bool active)
+{
+    if (strcmp(Params().NetworkIDString().c_str(),"regtest") == 0){
+        consensus.BIP66Enabled = active;
+    }
+}
+
 void CChainParams::UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
     consensus.nSmartnodePaymentsStartBlock = nSmartnodePaymentsStartBlock;
@@ -160,34 +168,37 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
     assert(false);
 }
 
-static void FindMainNetGenesisBlock(uint32_t nTime, uint32_t nBits, const char* network)
+/// Verify the POW hash is valid for the genesis block
+/// If starting Nonce is not valid, search for one
+static void VerifyGenesisPOW(const CBlock& genesis)
 {
-    CBlock block = CreateGenesisBlock(nTime, 0, nBits, 4, 5000 * COIN);
-
     arith_uint256 bnTarget;
-    bnTarget.SetCompact(block.nBits);
+    bnTarget.SetCompact(genesis.nBits);
 
-    for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
-        block.nNonce = nNonce;
-
+    CBlock block(genesis);
+    do
+    {
         uint256 hash = block.GetPOWHash();
-        if (nNonce % 48 == 0) {
-        	printf("\nrnonce=%d, pow is %s\n", nNonce, hash.GetHex().c_str());
+        if (UintToArith256(hash) <= bnTarget)
+        {
+            if (genesis.nNonce != block.nNonce)
+            {
+                std::cerr << "VerifyGenesisPOW:  provided nNonce (" << genesis.nNonce << ") invalid" << std::endl;
+                std::cerr << "   nonce: " << block.nNonce << ", pow hash: 0x" << hash.ToString()
+                          << ", block hash: 0x" << block.GetHash().ToString() << std::endl;
+                assert(genesis.nNonce == block.nNonce);
+            }
+            else
+            {
+                return;
+            }
         }
-        if (UintToArith256(hash) <= bnTarget) {
-        	printf("\n%s net\n", network);
-        	printf("\ngenesis is %s\n", block.ToString().c_str());
-        	printf("\npow is %s\n", hash.GetHex().c_str());
-        	printf("\ngenesisNonce is %d\n", nNonce);
-        	std::cout << "Genesis Merkle " << block.hashMerkleRoot.GetHex() << std::endl;
-        	return;
-        }
-
+        ++block.nNonce;
     }
+    while (block.nNonce != 0);
 
-    // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
-    // iteration of the above loop will give a result already
-    error("%sNetGenesisBlock: could not find %s genesis block",network, network);
+    // We should never get here
+    error("VerifyGenesisPOW: could not find valid Nonce for genesis block");
     assert(false);
 }
 
@@ -560,18 +571,13 @@ public:
         pchMessageStart[3] = 0x2c;//.
         nDefaultPort = 15168;
         nPruneAfterHeight = 100000;
-      //FindMainNetGenesisBlock(1648947907, 0x20001fff, "main");
         genesis = CreateGenesisBlock(1648947907, 3103, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x3f590e1339dfd2a738315700c2d9d0b44075d27fb488d4846283d3d65e462e03"));
         assert(genesis.hashMerkleRoot == uint256S("0xd8d1d8170ebd919e5b5d157524a79f9a5004fefa79dd17baf849813b290e9cc4"));
 
         vSeeds.emplace_back("seed01.bitoreum.cc");
-        vSeeds.emplace_back("seed02.bitoreum.cc");
-        vSeeds.emplace_back("seed03.bitoreum.cc");
-        vSeeds.emplace_back("seed04.bitoreum.cc");
-        vSeeds.emplace_back("seed05.bitoreum.cc");
-
 
         // Bitoreum addresses start with 'B'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,26);
@@ -630,7 +636,7 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
-        vSporkAddresses = {"Bo3hXk1d5mgu1dfUjwPj5FvWXA4JGNBQqc",};
+        vSporkAddresses = {"Bo3hXk1d5mgu1dfUjwPj5FvWXA4JGNBQqc"};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
@@ -718,8 +724,8 @@ public:
         pchMessageStart[3] = 0x6e; //m
         nDefaultPort = 15100;
         nPruneAfterHeight = 1000;
-        //FindMainNetGenesisBlock(1648954089,  0x20001fff, "test");
         genesis = CreateGenesisBlock(1648954089, 11824, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x8a7bab6345e4fe6f0f29a562fe2445fb78c1bb53b124395bb340b859e809d408"));
         assert(genesis.hashMerkleRoot == uint256S("0xd8d1d8170ebd919e5b5d157524a79f9a5004fefa79dd17baf849813b290e9cc4"));
@@ -730,10 +736,6 @@ public:
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("seed01.bitoreum.cc");
-        vSeeds.emplace_back("seed02.bitoreum.cc");
-        vSeeds.emplace_back("seed03.bitoreum.cc");
-		vSeeds.emplace_back("seed04.bitoreum.cc");
-		vSeeds.emplace_back("seed05.bitoreum.cc");
 
         // Testnet Bitoreum addresses start with 't'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,127);
@@ -777,7 +779,7 @@ public:
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
-        miningRequiresPeers = true;
+        miningRequiresPeers = false;
 
         nPoolMinParticipants = 3;
         nPoolNewMinParticipants = 2;
@@ -872,17 +874,17 @@ public:
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
+//      std::cout << "hash: " << consensus.hashGenesisBlock.ToString() << std::endl;
         assert(consensus.hashGenesisBlock == uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"));
         assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
-        devnetGenesis = FindDevNetGenesisBlock(genesis, 50 * COIN);
-        consensus.hashDevnetGenesisBlock = devnetGenesis.GetHash();
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
 
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5} };// 5% founder/dev fee forever
+        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
 
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -917,6 +919,7 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = true;
         fAllowMultiplePorts = true;
+        miningRequiresPeers = false;
         nLLMQConnectionRetryTimeout = 60;
 
         nPoolMinParticipants = 3;
@@ -925,22 +928,20 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
-        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR"};
+        // privKey: cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA
+        vSporkAddresses = {"yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc"};
         nMinSporkKeys = 1;
         // devnets are started with no blocks and no MN, so we can't check for upgraded MN (as there are none)
         fBIP9CheckSmartnodesUpgraded = false;
 
         checkpointData = (CCheckpointData) {
             {
-                { 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
-                { 1, devnetGenesis.GetHash() },
+                { 0, uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0")},
             }
         };
 
         chainTxData = ChainTxData{
-            devnetGenesis.GetBlockTime(), // * UNIX timestamp of devnet genesis block
-            2,                            // * we only have 2 coinbase transactions when a devnet is started up
-            0.01                          // * estimated number of transactions per second
+            
         };
     }
 };
@@ -974,10 +975,12 @@ public:
         consensus.BIP66Enabled = true; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.DIP0001Enabled = true;
         consensus.DIP0003Enabled = true;
+        consensus.DIP0008Enabled = true;
        // consensus.DIP0003EnforcementHeight = 500;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // bitoreum: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // bitoreum: 2.5 minutes
+        consensus.nMinimumDifficultyBlocks = 2000;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nPowDGWHeight = 60;
@@ -1003,6 +1006,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
+        consensus.nCollaterals = SmartnodeCollaterals(
+          {   {INT_MAX, 10 * COIN}  },
+          {  {240, 0}, {INT_MAX, 20} });
+
         pchMessageStart[0] = 0xfc;
         pchMessageStart[1] = 0xc1;
         pchMessageStart[2] = 0xb7;
@@ -1010,9 +1017,10 @@ public:
         nDefaultPort = 19899;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1614369600, 2, 0x207fffff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
+        assert(consensus.hashGenesisBlock == uint256S("0x485491468e03c8ac23dd38f70fc1cda9f98cbd0bf58945e2da6c94c2a2d8b044"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
 
@@ -1033,18 +1041,17 @@ public:
         nPoolMaxParticipants = 5;
         nPoolNewMaxParticipants = 20;
 
-        // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK
-        vSporkAddresses = {"BpqNTfxS79iotsdEiVbDoJYQRM2SiKzRzR"};
+        // privKey: cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA
+        vSporkAddresses = {"yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc"};
         nMinSporkKeys = 1;
         // regtest usually has no smartnodes in most tests, so don't check for upgraged MNs
         fBIP9CheckSmartnodesUpgraded = false;
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5} };// 5% founder/dev fee forever
-
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
+        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 500, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
 
         checkpointData = {
             {
-                {0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
+                {0, uint256S("b79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0")},
             }
         };
 
@@ -1114,6 +1121,11 @@ void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime,
 //    globalChainParams->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
 //}
 
+void UpdateBIP66Parameters(bool active)
+{
+    globalChainParams->UpdateBIP66Parameters(active);
+}
+
 void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
     globalChainParams->UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
@@ -1135,7 +1147,7 @@ void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
 }
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
-	globalChainParams->UpdateLLMQParams(totalMnCount, height, lowLLMQParams);
+    globalChainParams->UpdateLLMQParams(totalMnCount, height, lowLLMQParams);
 }
 bool IsMiningPhase(Consensus::LLMQParams params, int nHeight)
 {
@@ -1147,59 +1159,58 @@ bool IsMiningPhase(Consensus::LLMQParams params, int nHeight)
 }
 
 bool IsLLMQsMiningPhase(int nHeight) {
-	for(auto& it : globalChainParams->GetConsensus().llmqs) {
-		if(IsMiningPhase(it.second, nHeight)) {
-			return true;
-		}
-	}
-	return false;
+    for(auto& it : globalChainParams->GetConsensus().llmqs) {
+        if(IsMiningPhase(it.second, nHeight)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
-	bool isNotLLMQsMiningPhase;
-    //on startup if block height % dkgInterval fall between dkgMiningWindowStart and dkgMiningWindowEnd
-    //it will not switch to the correct llmq. if lastCheckHeight is 0 then force switch to the correct llmq
+    bool isNotLLMQsMiningPhase;
+
     if(lastCheckHeight < height &&
-    		(lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
-			((isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height)) || lastCheckHeight == 0)) {
-	    LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
-		lastCheckMnCount = totalMnCount;
-		lastCheckedLowLLMQParams = lowLLMQParams;
-		lastCheckHeight = height;
-		if(totalMnCount < 5) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
-			if(strcmp(Params().NetworkIDString().c_str(),"testnet") == 0) {
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq5_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq5_85;
-			} else {
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-			}
-		} else if(totalMnCount < 100) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		}  else if(totalMnCount < 600) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
-		} else {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-		}
-        if((height > 167545 && height <= 175163) || (height > 175163 && lowLLMQParams)){
+      (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
+      ((isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height)) || lastCheckHeight == 0))
+    {
+        LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
+        lastCheckMnCount = totalMnCount;
+        lastCheckedLowLLMQParams = lowLLMQParams;
+        lastCheckHeight = height;
+        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
+        if(totalMnCount < 5) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
+            if(isTestNet) {
+                consensus.llmqs[Consensus::LLMQ_400_60] = llmq5_60;
+                consensus.llmqs[Consensus::LLMQ_400_85] = llmq5_85;
+            } else {
+                consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
+                consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+            }
+        } else if((totalMnCount < 100 && !isTestNet) || (totalMnCount < 80   && isTestNet)) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+        } else if((totalMnCount < 600 && !isTestNet) || (totalMnCount < 4000 && isTestNet)) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
+        } else {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+        }
+        if((height > 167545 && height <= 175163) || (height > 175163 && lowLLMQParams)) {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq200_2;
-		} 		
-	}else{
-         if((lastCheckHeight < height)){
+        }
+    } else {
+        if((lastCheckHeight < height)) {
             lastCheckHeight = height;
-
-            if(height == 167545){
+            if(height == 167545) {
                 consensus.llmqs[Consensus::LLMQ_50_60] = llmq200_2;
-		    }
-
-            if(height == 175163){
+            }
+            if(height == 175163) {
                 consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
             }
         }

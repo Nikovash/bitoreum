@@ -1,7 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2023 The Bitoreum developers
+// Copyright (c) 2023 The Crystal Bitoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -43,14 +45,14 @@
 
 // Uncomment the following line to enable debugging messages
 // or enable on a per file basis prior to inclusion of util.h
-//#define ENABLE__B_I_T_O_R_E_U_M__DEBUG
-#ifdef ENABLE__B_I_T_O_R_E_U_M__DEBUG
+//#define ENABLE_RAPTOREUM_DEBUG
+#ifdef ENABLE_RAPTOREUM_DEBUG
 #define DBG( x ) x
 #else
 #define DBG( x )
 #endif
 
-//Bitoreum only features
+//Raptoreum only features
 
 extern bool fSmartnodeMode;
 extern bool fDisableGovernance;

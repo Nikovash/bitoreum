@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 
 #include <governance/governance.h>
 

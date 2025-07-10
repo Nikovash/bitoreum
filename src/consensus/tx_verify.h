@@ -18,7 +18,7 @@ class CValidationState;
 /** Transaction validation functions */
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeight, CAmount blockReward);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state);
 
 namespace Consensus {
 /**
@@ -27,7 +27,7 @@ namespace Consensus {
  * @param[out] txfee Set to the transaction fee if successful.
  * Preconditions: tx.IsCoinBase() is false.
  */
-  bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee, bool isV17active, bool fFeeVerify = false);
+  bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee, bool fFeeVerify = false);
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */

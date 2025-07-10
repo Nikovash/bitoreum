@@ -1,5 +1,6 @@
 // Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2023 The Bitoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -128,28 +129,8 @@ bool CDeterministicMNList::IsMNPoSeBanned(const uint256& proTxHash) const
 
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn, int height)
 {
-    uint256 mnHash = dmn.get()->collateralOutpoint.hash;
-    Coin coin;
-    // Should this be called directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
-    bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin, height);
     SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-
-    int64_t amount = coin.out.nValue;
-
-    int tipHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
-    if (height != tipHeight) {
-        int outputIndex = dmn.get()->collateralOutpoint.n;
-        CSpentIndexKey key(mnHash, outputIndex);
-        CSpentIndexValue value;
-
-        if (GetSpentIndex(key, value)) {
-            // Look at the amount held before it was spent (at this height):
-            if (value.blockHeight > height) {
-                amount = value.satoshis;
-            }
-        }
-    }
-    return !IsMNPoSeBanned(dmn) && (isValidUtxo && collaterals.isPayableCollateral(height, amount));
+    return !IsMNPoSeBanned(dmn) && collaterals.isPayableCollateral(height, dmn->pdmnState->nCollateralAmount);
 }
 
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn)
@@ -321,7 +302,7 @@ std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList
 {
     std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
     scores.reserve(GetAllMNsCount());
-    ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+    ForEachMN(true, nHeight, [&](const CDeterministicMNCPtr& dmn) {
         if (dmn->pdmnState->confirmedHash.IsNull()) {
             // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
             // future quorums
@@ -757,22 +738,16 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             newList.UpdateMN(dmn->proTxHash, newState);
         }
     });
-    
     bool isDecrease = false;
-    if ((nHeight > 167545 && nHeight < 175163) || (nHeight > 175163 && sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS))){
-    isDecrease = nHeight % 30 == 0; 
-    }else{
-    isDecrease = nHeight % 2 == 0;
+    if ((nHeight > 167545 && nHeight < 175163) ||
+        (nHeight > 175163 && sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS))) {
+        isDecrease = nHeight % 30 == 0;
+    } else {
+        isDecrease = nHeight % 2 == 0;
     }
     if(isDecrease) {
         DecreasePoSePenalties(newList);
     }
-
-
-//bool isDecrease = sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS) ? nHeight % 30 == 0 : nHeight % 2 == 0;
-//    if(isDecrease) {
-//        DecreasePoSePenalties(newList);
-//    }
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
@@ -828,6 +803,12 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             auto dmnState = std::make_shared<CDeterministicMNState>(proTx);
             dmnState->nRegisteredHeight = nHeight;
+            // set the collateral amount
+            if (proTx.collateralOutpoint.hash.IsNull()) {
+               dmnState->nCollateralAmount = tx.vout[proTx.collateralOutpoint.n].nValue;
+            } else {
+                dmnState->nCollateralAmount = coin.out.nValue;
+            }
             if (proTx.addr == CService()) {
                 // start in banned pdmnState as we need to wait for a ProUpServTx
                 dmnState->BanIfNotBanned(nHeight);

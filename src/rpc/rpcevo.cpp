@@ -1,5 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1375,12 +1375,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        cout << "protx_list: height" << height << ", chainActive.Height(): " << chainActive.Height() << ", fSpentIndex: " << fSpentIndex << endl;
-
-        if (height != chainActive.Height() && !fSpentIndex)
-        {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "specifying height requires spentindex enabled");
-        }
+        cout << "protx_list: height" << height << ", chainActive.Height(): " << chainActive.Height() << endl;
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]);
         bool onlyValid = type == "valid";

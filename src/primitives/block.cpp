@@ -20,18 +20,14 @@ uint256 CBlockHeader::GetHash() const
 
 uint256 CBlockHeader::ComputeHash() const
 {
-	if ( nTime > 1650614401 )
-	{
-		T512_8[115][10] = SPH_C32(0x87770000);
-		T512_8[145][2] = SPH_C32(0x87770000);
-
-	}
-	else
-	{
-		T512_8[115][10] = SPH_C32(0x81700000);
-		T512_8[145][2] = SPH_C32(0x81700000);
-	}
-	
+    if ( nTime > 1650614401 )
+    {
+        T512_8[115][10] = SPH_C32(0x87770000);
+        T512_8[145][2] = SPH_C32(0x87770000);
+    } else {
+        T512_8[115][10] = SPH_C32(0x81700000);
+        T512_8[145][2] = SPH_C32(0x81700000);
+    }
     return HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 }
 

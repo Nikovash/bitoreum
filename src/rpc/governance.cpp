@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -167,7 +167,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
 
-    // This command is dangerous because it consumes 5 _B_I_T_O_R_E_U_M_ irreversibly.
+    // This command is dangerous because it consumes 5 BTRM irreversibly.
     // If params are lost, it's very hard to bruteforce them and yet
     // users ignore all instructions on bitoreumcentral etc. and do not save them...
     // Let's log them here and hope users do not mess with debug.log
@@ -306,11 +306,11 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    bool fMnFound = mnList.HasValidMNByCollateral(activeSmartnodeInfo.outpoint);
+    bool fMnFound = WITH_LOCK(activeSmartnodeInfoCs, return mnList.HasValidMNByCollateral(activeSmartnodeInfo.outpoint));
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-            (activeSmartnodeInfo.blsPubKeyOperator ? activeSmartnodeInfo.blsPubKeyOperator->ToString() : "N/A"),
-            activeSmartnodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
+            (WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.blsPubKeyOperator ? activeSmartnodeInfo.blsPubKeyOperator->ToString() : "N/A")),
+            WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.outpoint.ToStringShort()), request.params.size(), fMnFound);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -347,6 +347,9 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     // Attempt to sign triggers if we are a MN
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
+            // govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
+            // govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
+            LOCK(activeSmartnodeInfoCs);
             govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
             govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
         } else {
@@ -442,7 +445,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     UniValue statusObj(UniValue::VOBJ);
     UniValue returnObj(UniValue::VOBJ);
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeSmartnodeInfo.outpoint);
+    auto dmn = WITH_LOCK(activeSmartnodeInfoCs, return deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeSmartnodeInfo.outpoint));
 
     if (!dmn) {
         nFailed++;
@@ -460,8 +463,11 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
-    if (activeSmartnodeInfo.blsKeyOperator) {
-        signSuccess = vote.Sign(*activeSmartnodeInfo.blsKeyOperator);
+    {
+        LOCK(activeSmartnodeInfoCs);
+        if (activeSmartnodeInfo.blsKeyOperator) {
+            signSuccess = vote.Sign(*activeSmartnodeInfo.blsKeyOperator);
+        }
     }
 
     if (!signSuccess) {

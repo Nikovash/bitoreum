@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
     BOOST_CHECK(a <= a);
     BOOST_CHECK(b >= a);
     BOOST_CHECK(b >= b);
-    // a should be 0.00000002 _B_I_T_O_R_E_U_M_/kB now
+    // a should be 0.00000002 RAPTOREUM/kB now
     a += a;
     BOOST_CHECK(a == b);
 }

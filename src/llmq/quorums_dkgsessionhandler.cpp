@@ -1,5 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Bitoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -166,8 +166,8 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 
     auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
 
-    if (!curSession->Init(pindexQuorum, mns, activeSmartnodeInfo.proTxHash)) {
-        LogPrintf("CDKGSessionManager::%s -- quorum initialiation failed for %s\n", __func__, curSession->params.name);
+    if (!curSession->Init(pindexQuorum, mns, WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
+        LogPrintf("CDKGSessionManager::%s -- quorum initialization failed for %s\n", __func__, curSession->params.name);
         return false;
     }
 

@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# this is not even used. this aint no equihash...
+exit 0
+
 export LC_ALL=C
 set -eu
 

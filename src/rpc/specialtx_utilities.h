@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitoreum developers
+// Copyright (c) 2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +15,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
-#endif//ENABLE_WALLET
+#endif // ENABLE_WALLET
 
 #include <netbase.h>
 #include <evo/specialtx.h>
@@ -100,11 +100,15 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     }
 }
 
+#endif // ENABLE_WALLET
+
 template<typename SpecialTxPayload>
 static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPayload& payload)
 {
     payload.inputsHash = CalcTxInputsHash(tx);
 }
+
+#ifdef ENABLE_WALLET
 
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)

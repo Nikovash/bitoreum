@@ -1,4 +1,14 @@
-// founder_payment.cpp
+/*
+ * Copyright (c) 2018 The Pigeon Core developers
+ * Copyright (c) 2025 Crystal Bitoreum developers
+ * Distributed under the MIT software license, see the accompanying
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.
+ * 
+ * FounderPayment.cpp
+ *
+ *  Created on: Jun 24, 2018
+ *      Author: Tri Nguyen
+ */
 
 #include <founder_payment.h>
 #include <rpc/server.h>
@@ -48,11 +58,10 @@ void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHe
     LogPrintf("FounderPayment::FillFounderPayment -- Founder payment %lld to %s\n", founderPayment, founderAddress.c_str());
 }
 
-// this is called with nHeight - 1 always
 bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward) {
     bool skipPayeeCheck = false;
     // technically since 834000 - 834600 will be ignored (payments to both new and old addresses, we can just
-    if ((height > 834000-1) && (height < 834600-1)) {
+    if ((height > 834000) && (height < 834600)) {
         LogPrintf("FounderPayment::IsBlockPayeeValid -- payee check disabled for height %d\n", height);
         skipPayeeCheck = true;
     }

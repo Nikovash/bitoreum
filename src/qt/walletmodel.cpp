@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2021 The Bitoreum developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -81,20 +81,21 @@ void WalletModel::pollBalanceChanged()
         now = GetTimeMillis();
 
     // if we are in-sync, update the UI regardless of last update time
-    if (!ninitialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY_SYNC) {    
-        interfaces::WalletBalances new_balances;
-        int numBlocks = -1;
-        if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
-            return;
-        }
-        nLastUpdateNotification = now;
+    if (!ninitialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY_SYNC) {
 
-        if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
+        nLastUpdateNotification = now;   
+        
+        if(fForceCheckBalanceChanged || ::chainActive.Height() != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
         {
+            interfaces::WalletBalances new_balances;
+            if (!m_wallet->tryGetBalances(new_balances)) {
+                return;
+            }
+            
             fForceCheckBalanceChanged = false;
 
             // Balance and number of transactions might have changed
-            cachedNumBlocks = numBlocks;
+            cachedNumBlocks = ::chainActive.Height();
             cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
 
             checkBalanceChanged(new_balances);
