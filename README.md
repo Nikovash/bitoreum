@@ -46,5 +46,3 @@ There are also regression and integration tests, written in Python, that are run
 The Travis CI system makes sure that every pull request is built for Windows, Linux, and OS X, and that unit/sanity tests are run automatically.
 
 Manual Quality Assurance (QA) Testing Changes should be tested by somebody other than the developer who wrote the code. This is especially important for large or high-risk changes. It is useful to add a test plan to the pull request description if testing the changes is not straightforward.
-
-Dont drink & Code, but do it to it
