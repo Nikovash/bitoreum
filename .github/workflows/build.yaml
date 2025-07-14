@@ -1,3 +1,6 @@
+# This workflow has been annotated to exclude test builds.
+# To re-enable tests in the future, uncomment all marked lines.
+
 name: Full Crystal Bitoreum Build
 
 on:
@@ -6,12 +9,14 @@ on:
       - main
       - dev
       - Codex
+      - test
       - 4.0.*
   pull_request:
     branches:
       - main
       - dev
       - Codex
+      - test
       - 4.0.*
   workflow_dispatch:
 
@@ -61,7 +66,7 @@ jobs:
       OS: ubuntu-24.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
+#     TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
@@ -138,11 +143,12 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
+
+#      - name: Upload Test Artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
+#          path: ${{ env.TEST_DIR }}
 
 
   build-ubuntu22-x86:
@@ -154,7 +160,7 @@ jobs:
       OS: ubuntu-22.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
+#     TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
@@ -227,11 +233,12 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
+ 
+ #     - name: Upload Test Artifacts
+ #       uses: actions/upload-artifact@v4
+ #       with:
+ #         name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
+ #         path: ${{ env.TEST_DIR }}
 
   build-win64:
     name: Win64 x86 Build
@@ -252,14 +259,17 @@ jobs:
           sudo apt-get install -y g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 nsis
           sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+ 
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
           make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
+ 
       - name: Configure
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 --disable-tests --disable-bench
+ 
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -267,6 +277,7 @@ jobs:
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}/
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_not_strip/
           strip ${BUILD_DIR}/* || true
+ 
       - name: Build Debug Binaries
         run: |
           make clean
@@ -276,6 +287,7 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_debug/
+ 
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -299,17 +311,18 @@ jobs:
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
           cat checksums.txt
+ 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
+ #     - name: Upload Test Artifacts
+ #       uses: actions/upload-artifact@v4
+ #       with:
+ #         name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
+ #         path: ${{ env.TEST_DIR }}
 
       - name: Generate Windows Installation File
         run: |
@@ -323,6 +336,7 @@ jobs:
           echo "sha256: $(shasum $final)" >> checksums.txt
           echo "openssl-sha256: $(sha256sum $final)" >> checksums.txt
           cat checksums.txt
+
       - name: Upload Win64 Installation File
         uses: actions/upload-artifact@v4
         with:
@@ -338,24 +352,28 @@ jobs:
       OS: ubuntu-22.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
+#     TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+ 
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
           sudo apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake g++-aarch64-linux-gnu
+ 
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
           make -C depends -j$(nproc) HOST=aarch64-linux-gnu
+ 
       - name: Configure
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
+ 
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -363,6 +381,7 @@ jobs:
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           strip ${BUILD_DIR}/* || true
+ 
       - name: Build Debug Binaries
         run: |
           make clean
@@ -372,6 +391,7 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+ 
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -412,18 +432,19 @@ jobs:
             echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
+ 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
-
-          
+ 
+#      - name: Upload Test Artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
+#          path: ${{ env.TEST_DIR }}
+         
   build-ubuntu24-arm64:
     name: Ubuntu 24 ARM64 Build
     needs: get-version
@@ -433,24 +454,28 @@ jobs:
       OS: ubuntu-24.04
       BUILD_DIR: build
       COMPRESS_DIR: compress
-      TEST_DIR: test
+#     TEST_DIR: test
       COIN_NAME: bitoreum
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+ 
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
           sudo apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake g++-aarch64-linux-gnu
+ 
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
           make -C depends -j$(nproc) HOST=aarch64-linux-gnu
+ 
       - name: Configure
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
+ 
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -458,6 +483,7 @@ jobs:
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           strip ${BUILD_DIR}/* || true
+ 
       - name: Build Debug Binaries
         run: |
           make clean
@@ -467,6 +493,7 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
+ 
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -505,17 +532,18 @@ jobs:
             echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
+ 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
+#      - name: Upload Test Artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
+#          path: ${{ env.TEST_DIR }}
           
   build-macos-13-x86:
     name: macOS 13 x86 Build
@@ -589,12 +617,6 @@ jobs:
           name: ${{ env.COIN_NAME }}-macOS13-x86-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-macOS13-x86-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
-
       - name: Generate Macos dmg files
         run: |
           make deploy
@@ -610,3 +632,9 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-macOS13-x86-dmg-${{ needs.get-version.outputs.version }}
           path: macos-dmg
+
+#      - name: Upload Test Artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ env.COIN_NAME }}-macOS13-x86-test-${{ needs.get-version.outputs.version }}
+#          path: ${{ env.TEST_DIR }}
