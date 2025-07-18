@@ -948,7 +948,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     }
 
     mnListRet = std::move(newList);
-    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
+    size_t mnCount = Params().IsScalableActive(nHeight) ? mnListRet.GetValidMNsCount() : mnListRet.GetAllMNsCount();
+    UpdateLLMQParams(mnCount, nHeight, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return true;
 }
 
@@ -1056,7 +1057,8 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
         }
     }
     // is this needed?
-    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight(), sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
+    size_t mnCount = Params().IsScalableActive(snapshot.GetHeight()) ? snapshot.GetValidMNsCount() : snapshot.GetAllMNsCount();
+    UpdateLLMQParams(mnCount, snapshot.GetHeight(), sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return snapshot;
 }
 
@@ -1095,6 +1097,8 @@ bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, u
 
 bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
 {
+    return Params().GetConsensus().DIP0003Enabled;
+/*
     LOCK(cs);
 
     if (nHeight == -1) {
@@ -1102,6 +1106,7 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
     }
     return Params().GetConsensus().DIP0003Enabled;
     //return nHeight >= Params().GetConsensus().DIP0003EnforcementHeight;
+*/
 }
 
 void CDeterministicMNManager::CleanupCache(int nHeight)

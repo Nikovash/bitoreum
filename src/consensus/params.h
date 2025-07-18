@@ -210,6 +210,7 @@ struct Params {
     int smartnodePaymentFixedBlock;
     int nFutureForkBlock;
     int nProtocolUpgradeBlock;
+    int nScalableHeight{1};
 
 };
 } // namespace Consensus

@@ -226,11 +226,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
 void CChainLocksHandler::CheckActiveState()
 {
-    bool fDIP0008Active;
-    {
-        LOCK(cs_main);
-        fDIP0008Active = Params().GetConsensus().DIP0008Enabled;
-    }
+    bool fDIP0008Active = Params().GetConsensus().DIP0008Enabled;
 
     LOCK(cs);
     bool oldIsEnforced = isEnforced;

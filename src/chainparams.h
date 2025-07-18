@@ -110,6 +110,10 @@ public:
          int height = index == nullptr ? 0 : index->nHeight;
          return height >= GetConsensus().nProtocolUpgradeBlock;
     };
+    bool IsScalableActive(int nHeight) const {
+         int height = nHeight > 0 ? nHeight : 0;
+         return height >= GetConsensus().nScalableHeight;
+    }
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     bool BIP9CheckSmartnodesUpgraded() const { return fBIP9CheckSmartnodesUpgraded; }
