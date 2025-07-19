@@ -1233,7 +1233,6 @@ int lastllmqcheck = 0;
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
     bool isNotLLMQsMiningPhase;
     bool changeTriggered{false};
-
     if(lastCheckHeight < height &&
       (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
       ((isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height)) || lastCheckHeight == 0))
@@ -1244,6 +1243,7 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
         lastCheckedLowLLMQParams = lowLLMQParams;
         lastCheckHeight = height;
         changeTriggered = true;
+
         bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
         if(totalMnCount < 5) {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
@@ -1253,6 +1253,7 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
                 consensus.llmqs[Consensus::LLMQ_400_85] = llmq5_85;
             } else {
                 consensus.llmqs[Consensus::LLMQ_100_67] = llmq5_67_platform;
+
                 consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
                 consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
             }
@@ -1266,11 +1267,13 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
             consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
             consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
             consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_mainnet;
+
         } else {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
             consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
             consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
             consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_mainnet;
+
         }
         if((height > 167545 && height <= 175163) || (height > 175163 && lowLLMQParams)) {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq200_2;

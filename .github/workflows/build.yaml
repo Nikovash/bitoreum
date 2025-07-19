@@ -9,8 +9,7 @@ on:
       - main
       - dev
       - Codex
-      - test
-      - 4.0.*
+      - 4.x
     tags:
       - v*
   pull_request:
@@ -18,8 +17,7 @@ on:
       - main
       - dev
       - Codex
-      - test
-      - 4.0.*
+      - 4.x
   workflow_dispatch:
 
 env:
@@ -274,7 +272,7 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 --disable-tests --disable-bench
- 
+
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -378,7 +376,7 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
- 
+
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -480,7 +478,7 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
- 
+
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -549,7 +547,7 @@ jobs:
 #        with:
 #          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
 #          path: ${{ env.TEST_DIR }}
-          
+
   build-macos-13-x86:
     name: macOS 13 x86 Build
     needs: get-version
