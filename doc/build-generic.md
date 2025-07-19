@@ -1,81 +1,108 @@
-GENERIC BUILD NOTES
-====================
-Some notes on how to build Bitoreum Core based on the [depends](../depends/README.md) build system.
+# Crystal Bitoreum Core: Generic Build Notes
 
-Note on old build instructions
-------------------------------
-In the past, the build documentation contained instructions on how to build Bitoreum with system-wide installed dependencies
-like BerkeleyDB 4.8, boost and Qt. Building this way is considered deprecated and only building with the `depends` prefix
-is supported today.
+These instructions explain how to build **Crystal Bitoreum Core** using the modern `depends` system.
 
-Required build tools and environment
-------------------------------------
-Building the dependencies and Bitoreum Core requires some essential build tools to be installed before. Please see
-[build-unix](build-unix.md), [build-osx](build-osx.md) and [build-windows](build-windows.md) for details.
+---
 
-Building dependencies
----------------------
-Bitoreum inherited the `depends` folder from Bitcoin, which contains all dependencies required to build Bitoreum. These
-dependencies must be built before Bitoreum can actually be built. To do so, perform the following:
+## Deprecation Notice
 
-```bash
-$ cd depends
-$ make -j4 # Choose a good -j value, depending on the number of CPU cores available
-$ cd ..
-```
+Old instructions that relied on system-wide dependencies (like Berkeley DB, Boost, Qt) are deprecated.  
+The **only supported method** is to use the `depends` build system and compile with the appropriate `--prefix`.
 
-This will download and build all dependencies required to build Bitoreum Core. Caching of build results will ensure that only
-the packages are rebuilt which have changed since the last depends build.
+---
 
-It is required to re-run the above commands from time to time when dependencies have been updated or added. If this is
-not done, build failures might occur when building Bitoreum.
+## Required Tools
 
-Please read the [depends](../depends/README.md) documentation for more details on supported hosts and configuration
-options. If no host is specified (as in the above example) when calling `make`, the depends system will default to your
-local host system. 
+Ensure that your system has all build tools installed before continuing.  
+Refer to platform-specific setup in:
 
-Building Bitoreum Core
----------------------
+- [Linux Build Notes](Linux-build.md)
+- [macOS Build Notes](build-macos.md)
+- [Windows Build Notes](build-windows.md)
+
+---
+
+## Building Dependencies
+
+Crystal Bitoreum Core uses a standalone `depends/` system (inherited from Bitcoin) to manage its full build environment.
 
 ```bash
-$ ./autogen.sh
-$ ./configure --prefix=`pwd`/depends/<host>
-$ make
-$ make install # optional
+cd depends
+make -j$(nproc)  # Use appropriate -j based on core count
+cd ..
 ```
 
-Please replace `<host>` with your local system's `host-platform-triplet`. The following triplets are usually valid:
-- `i686-pc-linux-gnu` for Linux32
-- `x86_64-pc-linux-gnu` for Linux64
-- `i686-w64-mingw32` for Win32
-- `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin14` for MacOSX
-- `arm-linux-gnueabihf` for Linux ARM 32 bit
-- `aarch64-linux-gnu` for Linux ARM 64 bit
+This will:
+- Download all required source packages
+- Build fully self-contained versions
+- Cache built components to avoid rebuilding unchanged parts
 
-If you want to cross-compile for another platform, choose the appropriate `<host>` and make sure to build the
-dependencies with the same host before.
+Re-run this periodically if dependencies change or builds fail.
 
-If you want to build for the same host but different distro, add `--enable-glibc-back-compat` when calling `./configure`.
+For advanced info, see [`depends/README.md`](../depends/README.md)
 
+---
 
-ccache
-------
-`./configure` of Bitoreum Core will autodetect the presence of ccache and enable use of it. To disable ccache, use
-`./configure --prefix=<prefix> --disable-ccache`. When installed and enabled, [ccache](https://ccache.samba.org/) will
-cache build results on source->object level.
+## Building Crystal Bitoreum Core
 
-The default maximum cache size is 5G, which might not be enough to cache multiple builds when switching Git branches
-very often. It is advised to increase the maximum cache size:
+Once dependencies are built:
 
 ```bash
-$ ccache -M20G
+./autogen.sh
+./configure --prefix=$(pwd)/depends/<host>
+make
+make install  # optional
 ```
 
-Additional Configure Flags
---------------------------
-A list of additional configure flags can be displayed with:
+Replace `<host>` with your platform’s triplet:
+
+| Platform           | Triplet                     |
+|--------------------|-----------------------------|
+| Linux 64-bit       | `x86_64-pc-linux-gnu`       |
+| Linux 32-bit       | `i686-pc-linux-gnu`         |
+| Windows 64-bit     | `x86_64-w64-mingw32`        |
+| Windows 32-bit     | `i686-w64-mingw32`          |
+| macOS              | `x86_64-apple-darwin22`     |
+| Linux ARM 32-bit   | `arm-linux-gnueabihf`       |
+| Linux ARM 64-bit   | `aarch64-linux-gnu`         |
+
+For cross-compilation:  
+- Build dependencies with the **same** `<host>` triplet.
+- Use `--host=<triplet>` when configuring.
+
+For distro compatibility across libc versions:
+
+```bash
+./configure --enable-glibc-back-compat
+```
+
+---
+
+## Using `ccache` for Faster Builds
+
+If installed, `./configure` will detect and use [ccache](https://ccache.dev/) automatically.  
+To disable:
+
+```bash
+./configure --disable-ccache
+```
+
+Recommended: Increase default cache size:
+
+```bash
+ccache -M 20G
+```
+
+---
+
+## Additional Flags
+
+View all configuration options with:
 
 ```bash
 ./configure --help
 ```
+
+---
+
+This guide ensures consistent and isolated builds using the `depends` system—essential for reproducibility and cross-platform deployment.

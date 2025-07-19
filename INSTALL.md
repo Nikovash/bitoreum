@@ -1,4 +1,4 @@
-Building Bitoreum
+Building Crsystal Bitoreum
 =============
 
 See doc/build-*.md for instructions on building the various

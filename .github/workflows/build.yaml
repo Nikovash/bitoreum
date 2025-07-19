@@ -11,6 +11,8 @@ on:
       - Codex
       - test
       - 4.0.*
+    tags:
+      - v*
   pull_request:
     branches:
       - main
@@ -39,23 +41,25 @@ jobs:
       - name: Triggered By
         run: |
           echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
-      - name: Checkout
-        uses: actions/checkout@v4
 
-      - name: Generate Version Logic
-        id: selected-version
-        run: |
-          VERSION="${GITHUB_REF_NAME}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "BUILD_VERSION=$VERSION" > version.txt
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: version
-          path: version.txt
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    outputs:
-      version: ${{ steps.selected-version.outputs.version }}
+    - name: Generate Version Logic
+      id: selected-version
+      run: |
+        VERSION=$(grep '^release-version=' build.properties | cut -d'=' -f2)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "BUILD_VERSION=$VERSION" > version.txt
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: version
+        path: version.txt
+
+  outputs:
+    version: ${{ steps.selected-version.outputs.version }}
 
   build-ubuntu24-x86:
     name: Ubuntu 24 x86 Build
