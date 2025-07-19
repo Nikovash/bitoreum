@@ -250,7 +250,7 @@ static Consensus::LLMQParams llmq5_60 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 4,
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
@@ -269,7 +269,7 @@ static Consensus::LLMQParams llmq5_85 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 4,
 
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
@@ -288,7 +288,7 @@ static Consensus::LLMQParams llmq20_60 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 15,
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
@@ -306,7 +306,7 @@ static Consensus::LLMQParams llmq20_85 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 18,
 
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
@@ -468,6 +468,45 @@ static Consensus::LLMQParams llmq100_67_mainnet = {
         .recoveryMembers = 50,
 };
 
+// Downscaled Platform
+static Consensus::LLMQParams llmq50_67_mainnet = {
+        .type = Consensus::LLMQ_100_67,
+        .name = "llmq_50_67",
+        .size = 50,
+        .minSize = 40,
+        .threshold = 34,
+
+        .dkgInterval = 30, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 40,
+
+        .signingActiveQuorumCount = 12, // half day worth of LLMQs
+
+        .keepOldConnections = 13,
+        .recoveryMembers = 25,
+};
+
+// Mini Platform
+static Consensus::LLMQParams llmq5_67_platform = {
+        .type = Consensus::LLMQ_100_67,
+        .name = "llmq_5_67",
+        .size = 5,
+        .minSize = 3,
+        .threshold = 3,
+
+        .dkgInterval = 30, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 3,
+
+        .signingActiveQuorumCount = 2, // 2h worth of LLMQs
+
+        .keepOldConnections = 3,
+        .recoveryMembers = 3,
+};
 
 // Used for Platform
 static Consensus::LLMQParams llmq100_67_testnet = {
@@ -481,12 +520,32 @@ static Consensus::LLMQParams llmq100_67_testnet = {
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 80,
+        .dkgBadVotesThreshold = 50,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
         .keepOldConnections = 25,
         .recoveryMembers = 50,
+};
+
+// Downscaled Platform (testnet)
+static Consensus::LLMQParams llmq50_67_testnet = {
+        .type = Consensus::LLMQ_100_67,
+        .name = "llmq_50_67",
+        .size = 50,
+        .minSize = 40,
+        .threshold = 67,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 40,
+
+        .signingActiveQuorumCount = 12, // half day worth of LLMQs
+
+        .keepOldConnections = 13,
+        .recoveryMembers = 25,
 };
 
 /**
@@ -541,6 +600,7 @@ public:
         consensus.smartnodePaymentFixedBlock = 6800;
         consensus.nFutureForkBlock = 420420;
         consensus.nProtocolUpgradeBlock = 834600;
+        consensus.nScalableHeight = 842000;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -604,7 +664,8 @@ public:
             {176720, 1000000 * COIN},
             {220720, 1250000 * COIN},
             {264720, 1500000 * COIN},
-            {INT_MAX, 1800000 * COIN}
+            {845000, 1800000 * COIN},
+            {INT_MAX, 2000000 * COIN}
           },
           { {5761, 0}, {INT_MAX, 20} }
         );
@@ -700,6 +761,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.nFutureForkBlock = 1000;
+        consensus.nScalableHeight = 1500;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -1167,24 +1229,31 @@ bool IsLLMQsMiningPhase(int nHeight) {
     return false;
 }
 
+int lastllmqcheck = 0;
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
     bool isNotLLMQsMiningPhase;
-
+    bool changeTriggered{false};
     if(lastCheckHeight < height &&
       (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
       ((isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height)) || lastCheckHeight == 0))
     {
-        LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
+        LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d-%d\n", lastCheckHeight, height,
+            lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase, IsScalableActive(height));
         lastCheckMnCount = totalMnCount;
         lastCheckedLowLLMQParams = lowLLMQParams;
         lastCheckHeight = height;
+        changeTriggered = true;
+
         bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
         if(totalMnCount < 5) {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
             if(isTestNet) {
+                consensus.llmqs[Consensus::LLMQ_100_67] = llmq5_67_platform;
                 consensus.llmqs[Consensus::LLMQ_400_60] = llmq5_60;
                 consensus.llmqs[Consensus::LLMQ_400_85] = llmq5_85;
             } else {
+                consensus.llmqs[Consensus::LLMQ_100_67] = llmq5_67_platform;
+
                 consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
                 consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
             }
@@ -1192,14 +1261,19 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
             consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
             consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+            consensus.llmqs[Consensus::LLMQ_100_67] = llmq50_67_mainnet;
         } else if((totalMnCount < 600 && !isTestNet) || (totalMnCount < 4000 && isTestNet)) {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
             consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
             consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
+            consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_mainnet;
+
         } else {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
             consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
             consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+            consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_mainnet;
+
         }
         if((height > 167545 && height <= 175163) || (height > 175163 && lowLLMQParams)) {
             consensus.llmqs[Consensus::LLMQ_50_60] = llmq200_2;
@@ -1214,5 +1288,15 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
                 consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
             }
         }
+    }
+    if (lastllmqcheck != height || changeTriggered) {
+        LogPrint(BCLog::LLMQ_SCALING, "UpdateLLMQParams %d-%ld-%s-%s-%s-%s\n",
+            height, totalMnCount,
+            consensus.llmqs[Consensus::LLMQ_50_60].name,
+            consensus.llmqs[Consensus::LLMQ_400_60].name,
+            consensus.llmqs[Consensus::LLMQ_400_85].name,
+            consensus.llmqs[Consensus::LLMQ_100_67].name
+        );
+        lastllmqcheck = height;
     }
 }

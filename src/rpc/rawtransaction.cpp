@@ -122,7 +122,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
             "\nArguments:\n"
             "1. \"txid\"      (string, required) The transaction id\n"
-            "2. verbose     (bool, optional, default=false) If false, return a string, otherwise return a json object\n"
+            "2. verbose     (bool, optional, default=true) If false, return a string, otherwise return a json object\n"
             "3. \"blockhash\" (string, optional) The block in which to look for the transaction\n"
 
             "\nResult (if verbose is not set or set to false):\n"
@@ -197,7 +197,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     }
 
     // Accept either a bool (true) or a num (>=1) to indicate verbose output.
-    bool fVerbose = false;
+    bool fVerbose = true;
     if (!request.params[1].isNull()) {
         fVerbose = request.params[1].isNum() ? (request.params[1].get_int() != 0) : request.params[1].get_bool();
     }

@@ -135,6 +135,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::LLMQ, "llmq"},
     {BCLog::LLMQ_DKG, "llmq-dkg"},
     {BCLog::LLMQ_SIGS, "llmq-sigs"},
+    {BCLog::LLMQ_SCALING, "llmq-scaling"},
     {BCLog::MNPAYMENTS, "mnpayments"},
     {BCLog::MNSYNC, "mnsync"},
     {BCLog::COINJOIN, "coinjoin"},
@@ -158,6 +159,7 @@ bool GetLogCategory(uint64_t *f, const std::string *str)
                  | BCLog::LLMQ
                  | BCLog::LLMQ_DKG
                  | BCLog::LLMQ_SIGS
+                 | BCLog::LLMQ_SCALING
                  | BCLog::MNPAYMENTS
                  | BCLog::MNSYNC
                  | BCLog::COINJOIN
