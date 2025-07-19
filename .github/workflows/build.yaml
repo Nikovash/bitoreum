@@ -329,10 +329,6 @@ jobs:
  #         name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
  #         path: ${{ env.TEST_DIR }}
 
-      - name: Workaround for NSIS expecting README_windows.txt
-        run: |
-          cp doc/README_windows.md doc/README_windows.txt
-
       - name: Generate Windows Installation File
         run: |
           make deploy
