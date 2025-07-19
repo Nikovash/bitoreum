@@ -482,9 +482,9 @@ static Consensus::LLMQParams llmq50_67_mainnet = {
         .dkgMiningWindowEnd = 18,
         .dkgBadVotesThreshold = 40,
 
-        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+        .signingActiveQuorumCount = 12, // half day worth of LLMQs
 
-        .keepOldConnections = 10,
+        .keepOldConnections = 13,
         .recoveryMembers = 25,
 };
 
@@ -502,9 +502,9 @@ static Consensus::LLMQParams llmq5_67_platform = {
         .dkgMiningWindowEnd = 18,
         .dkgBadVotesThreshold = 3,
 
-        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+        .signingActiveQuorumCount = 2, // 2h worth of LLMQs
 
-        .keepOldConnections = 2,
+        .keepOldConnections = 3,
         .recoveryMembers = 3,
 };
 
@@ -540,11 +540,11 @@ static Consensus::LLMQParams llmq50_67_testnet = {
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 80,
+        .dkgBadVotesThreshold = 40,
 
-        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+        .signingActiveQuorumCount = 12, // half day worth of LLMQs
 
-        .keepOldConnections = 10,
+        .keepOldConnections = 13,
         .recoveryMembers = 25,
 };
 
