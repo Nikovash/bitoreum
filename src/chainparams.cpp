@@ -250,7 +250,7 @@ static Consensus::LLMQParams llmq5_60 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 4,
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
@@ -269,7 +269,7 @@ static Consensus::LLMQParams llmq5_85 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 4,
 
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
@@ -288,7 +288,7 @@ static Consensus::LLMQParams llmq20_60 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 15,
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
@@ -306,7 +306,7 @@ static Consensus::LLMQParams llmq20_85 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 30,
+        .dkgBadVotesThreshold = 18,
 
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
@@ -474,13 +474,13 @@ static Consensus::LLMQParams llmq50_67_mainnet = {
         .name = "llmq_50_67",
         .size = 50,
         .minSize = 40,
-        .threshold = 67,
+        .threshold = 34,
 
         .dkgInterval = 30, // one DKG per hour
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 80,
+        .dkgBadVotesThreshold = 40,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
@@ -494,13 +494,13 @@ static Consensus::LLMQParams llmq5_67_platform = {
         .name = "llmq_5_67",
         .size = 5,
         .minSize = 3,
-        .threshold = 67,
+        .threshold = 3,
 
         .dkgInterval = 30, // one DKG per hour
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 80,
+        .dkgBadVotesThreshold = 3,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
@@ -520,7 +520,7 @@ static Consensus::LLMQParams llmq100_67_testnet = {
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 80,
+        .dkgBadVotesThreshold = 50,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
@@ -1283,4 +1283,11 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
             }
         }
     }
+    LogPrint(BCLog::LLMQ_SCALING, "UpdateLLMQParams %d-%ld-%s-%s-%s-%s\n",
+        height, totalMnCount,
+        consensus.llmqs[Consensus::LLMQ_50_60].name,
+        consensus.llmqs[Consensus::LLMQ_400_60].name,
+        consensus.llmqs[Consensus::LLMQ_400_85].name,
+        consensus.llmqs[Consensus::LLMQ_100_67].name
+    );
 }
