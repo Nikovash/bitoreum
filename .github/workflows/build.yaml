@@ -569,9 +569,23 @@ jobs:
         run: |
           make -j$(sysctl -n hw.ncpu)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
-          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}/
-          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
-          xcrun strip -x "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-qt"
+          for f in src/bitoreum-cli src/bitoreumd src/qt/bitoreum-qt; do
+            if [ -f "$f" ]; then
+              cp "$f" "${BUILD_DIR}/"
+              cp "$f" "${BUILD_DIR}_not_strip/"
+            fi
+          done
+
+          for f in bitoreum-cli bitoreumd bitoreum-qt; do
+            if [ -f "${BUILD_DIR}/$f" ]; then
+              xcrun strip -x "${BUILD_DIR}/$f" || true
+            fi
+          done
+
+          echo "Contents of ${BUILD_DIR}:"
+          ls -l "${BUILD_DIR}"
+          echo "Contents of ${BUILD_DIR}_not_strip:"
+          ls -l "${BUILD_DIR}_not_strip"
 
       - name: Generate Checksum and Compress
         run: |
