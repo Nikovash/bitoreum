@@ -589,37 +589,47 @@ jobs:
 
       - name: Generate Checksum and Compress
         run: |
-          cd ${BUILD_DIR}
+          # Release (stripped)
+          pushd "${BUILD_DIR}"
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
-          shasum -a 256 * >> checksums.txt
+          shasum -a 256 * >> checksums.txt || true
           echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz ../${BUILD_DIR}/*
+          openssl sha256 * >> checksums.txt || true
+          /usr/bin/zip -r -9 "../${COIN_NAME}-macOS13-x86-release-${{ needs.get-version.outputs.version }}.zip" .
+          popd
 
-          cd ../${BUILD_DIR}_not_strip
+          # Not-strip
+          pushd "${BUILD_DIR}_not_strip"
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
-          shasum -a 256 * >> checksums.txt
+          shasum -a 256 * >> checksums.txt || true
           echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
+          openssl sha256 * >> checksums.txt || true
+          /usr/bin/zip -r -9 "../${COIN_NAME}-macOS13-x86-notstrip-${{ needs.get-version.outputs.version }}.zip" .
+          popd
+
+          # Collect archives and global checksums
+          mkdir -p "${COMPRESS_DIR}"
+          mv ./*.zip "${COMPRESS_DIR}/"
+          pushd "${COMPRESS_DIR}"
+          {
+            echo "Checksums for release archives:"
+            echo "------------------------------------"
+            for f in *.zip; do
+              echo "$f"
+              echo "sha256: $(shasum "$f")"
+              echo "openssl-sha256: $(openssl sha256 "$f")"
+              echo "------------------------------------"
+            done
+          } > checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
-          cd ..
-          mkdir -p ${COMPRESS_DIR}
-          mv *.tar.gz ${COMPRESS_DIR}/
-          cd ${COMPRESS_DIR}
-          echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-          cat checksums.txt
-          cd ..
+          popd
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
