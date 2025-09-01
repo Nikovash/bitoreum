@@ -43,12 +43,12 @@ Our focus is on supporting the community who remained, welcoming new members, wo
 
 ## Immediate Roadmap
 
-1. **Stabilize the core software** — address all known bugs.
-2. **Re-enable pool support** — maintaining mining compatibility.
-3. **Release public binaries** — for miners, node operators, and exchanges.
-4. **Transition existing SmartNodes** — seamless migration to the new core.
-5. **Activate transparent dev fee reporting** — published quarterly.
-6. **Expand the developer team** — funded from the post-fork dev fee.
+1. **Stabilize the core software** — address all known bugs in 3.0.2.1
+2. **Re-enable pool support** — maintaining mining compatibility
+3. **Release public binaries** — for miners, node operators, and exchanges
+4. **Transition existing SmartNodes** — seamless migration to the new 4x core
+5. **Activate transparent dev fee reporting** — published quarterly
+6. **Expand the developer team** — funded from the post-fork dev fee
 
 We’ll publish a full roadmap soon at [https://www.bitoreum.cc](https://www.bitoreum.cc).
 
@@ -88,9 +88,9 @@ Let’s build something lasting... Together!
 # Useful Links
 
 **Website**: [https://bitoreum.cc](https://bitoreum.cc)  
-**Explorer**: [explorer.bitoreum.cc](https://explorer.bitoreum.cc)  
-**Documents**: [bitoreum.cc/documents](https://bitoreum.cc/documents)  
-**Discord**: [discord.gg/SarVf8NcKQ](https://discord.com/invite/SarVf8NcKQ)
-**Youtube**: [@CrystalBitoreum](https://www.youtube.com/@CrystalBitoreum)
-**BlueSky**: [Ramen Wukong](https://bsky.app/profile/bitoreum.cc)
-**Twitter**: [@CrystalBitoreum](https://x.com/CrystalBitoreum)
+**Explorer**: [https://explorer.bitoreum.cc](https://explorer.bitoreum.cc)  
+**Documents**: [Documents](https://bitoreum.cc/documents)  
+**Discord**: [discord.gg/SarVf8NcKQ](https://discord.com/invite/SarVf8NcKQ)<br />
+**Youtube**: [@CrystalBitoreum](https://www.youtube.com/@CrystalBitoreum)<br />
+**BlueSky**: [Ramen Wukong](https://bsky.app/profile/bitoreum.cc)<br />
+**Twitter**: [@CrystalBitoreum](https://x.com/CrystalBitoreum)<br />
