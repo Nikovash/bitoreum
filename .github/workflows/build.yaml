@@ -556,10 +556,22 @@ jobs:
           brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
           pip3 install ds_store mac_alias
           pip3 install -U pip setuptools
+          for pkg in automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python; do
+            if ! brew list --versions "$pkg" >/dev/null 2>&1; then
+              echo "Installing $pkg..."
+              brew install "$pkg"
+            else
+              echo "$pkg already installed, skipping."
+            fi
+          done
+          pip3 install -U pip setuptools
+          pip3 install ds_store mac_alias
+
       - name: Build Depends
         run: |
           echo "building with $(sysctl -n hw.ncpu) threads"
           make -C depends -j$(sysctl -n hw.ncpu) HOST=x86_64-apple-darwin22
+
       - name: Configure
         run: |
           ./autogen.sh
