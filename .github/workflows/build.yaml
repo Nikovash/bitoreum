@@ -572,23 +572,20 @@ build-macos-13-x86:
       run: |
         ./autogen.sh
         ./configure --prefix="$(pwd)"/depends/x86_64-apple-darwin22
-#       ./configure --prefix="$(pwd)"/depends/x86_64-apple-darwin22 --disable-tests --disable-bench
-
+        
     - name: Build Binaries
       run: |
         make -j"$(sysctl -n hw.ncpu)"
         mkdir -p "${BUILD_DIR}" "${BUILD_DIR}_not_strip"
         
         # Copy once from src to release folder
-#       cp src/bitoreum-cli src/bitoreumd src/bitoreum-tx src/qt/bitoreum-qt "${BUILD_DIR}/"
         cp src/bitoreum-cli src/bitoreumd src/qt/bitoreum-qt "${BUILD_DIR}/"
         
         # Copy again to the not_strip folder (DON'T mv out of src)
-#       cp "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-tx" "${BUILD_DIR}/bitoreum-qt" "${BUILD_DIR}_not_strip/"
+        #cp "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-tx" "${BUILD_DIR}/bitoreum-qt" "${BUILD_DIR}_not_strip/"
         cp "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-qt" "${BUILD_DIR}_not_strip/"
         
         # macOS-safe strip on the release copies only
-#       xcrun strip -x "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-tx" "${BUILD_DIR}/bitoreum-qt"
         xcrun strip -x "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-qt"
         
         # sanity
