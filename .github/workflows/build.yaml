@@ -43,7 +43,6 @@ jobs:
       - name: Triggered By
         run: |
           echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -53,7 +52,6 @@ jobs:
           VERSION=$(grep '^release-version=' build.properties | cut -d'=' -f2)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "BUILD_VERSION=$VERSION" > version.txt
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -272,7 +270,6 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 --disable-tests --disable-bench
-
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -339,7 +336,6 @@ jobs:
           echo "sha256: $(shasum $final)" >> checksums.txt
           echo "openssl-sha256: $(sha256sum $final)" >> checksums.txt
           cat checksums.txt
-
       - name: Upload Win64 Installation File
         uses: actions/upload-artifact@v4
         with:
@@ -376,7 +372,6 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
-
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -478,7 +473,6 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/aarch64-linux-gnu --host=aarch64-linux-gnu --disable-tests --disable-bench
-
       - name: Build Binaries
         run: |
           make -j$(nproc)
@@ -548,111 +542,93 @@ jobs:
 #          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
 #          path: ${{ env.TEST_DIR }}
 
-build-macos-13-x86:
-  name: macOS 13 x86 Build
-  needs: get-version
-  runs-on: macos-13
+  build-macos-13-x86:
+    name: macOS 13 x86 Build
+    needs: get-version
+    runs-on: macos-13
 
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install Required Packages
-      run: |
-        brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
-        pip3 install ds_store mac_alias
-        pip3 install -U pip setuptools
+      - name: Install Required Packages
+        run: |
+          brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
+          pip3 install ds_store mac_alias
+          pip3 install -U pip setuptools
+      - name: Build Depends
+        run: |
+          echo "building with $(sysctl -n hw.ncpu) threads"
+          make -C depends -j$(sysctl -n hw.ncpu) HOST=x86_64-apple-darwin22
+      - name: Configure
+        run: |
+          ./autogen.sh
+          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin22
+    
+      - name: Build Binaries
+        run: |
+          make -j$(sysctl -n hw.ncpu)
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip
+          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}/
+          cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
+          xcrun strip -x "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-qt"
+		  
+      - name: Generate Checksum and Compress
+        run: |
+          cd ${BUILD_DIR}
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum -a 256 * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          openssl sha256 * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz ../${BUILD_DIR}/*
+          
+		  cd ../${BUILD_DIR}_not_strip
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum -a 256 * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          openssl sha256 * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
+          cd ..
+          mkdir -p ${COMPRESS_DIR}
+          mv *.tar.gz ${COMPRESS_DIR}/
+          cd ${COMPRESS_DIR}
+          echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
+          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
+          echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
+          echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
+          cat checksums.txt
+          cd ..
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-macOS13-x86-${{ needs.get-version.outputs.version }}
+          path: ${{ env.COMPRESS_DIR }}
 
-    - name: Build Depends
-      run: |
-        echo "building with $(sysctl -n hw.ncpu) threads"
-        make -C depends -j"$(sysctl -n hw.ncpu)" HOST=x86_64-apple-darwin22
+      - name: Generate Macos dmg files
+        run: |
+          make deploy
+          mkdir -p macos-dmg
+          mv Bitoreum-Qt.dmg macos-dmg/Crystal-Bitoreum-Qt.dmg
+          cd macos-dmg
+          echo "sha256: $(shasum Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
+          echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
+          cd ..
+      - name: Upload dmg file
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-macOS13-x86-dmg-${{ needs.get-version.outputs.version }}
+          path: macos-dmg
 
-    - name: Configure
-      run: |
-        ./autogen.sh
-        ./configure --prefix="$(pwd)"/depends/x86_64-apple-darwin22
-        
-    - name: Build Binaries
-      run: |
-        make -j"$(sysctl -n hw.ncpu)"
-        mkdir -p "${BUILD_DIR}" "${BUILD_DIR}_not_strip"
-        
-        # Copy once from src to release folder
-        cp src/bitoreum-cli src/bitoreumd src/qt/bitoreum-qt "${BUILD_DIR}/"
-        
-        # Copy again to the not_strip folder (DON'T mv out of src)
-        #cp "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-tx" "${BUILD_DIR}/bitoreum-qt" "${BUILD_DIR}_not_strip/"
-        cp "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-qt" "${BUILD_DIR}_not_strip/"
-        
-        # macOS-safe strip on the release copies only
-        xcrun strip -x "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-qt"
-        
-        # sanity
-        echo "Contents of ${BUILD_DIR}:"
-        ls -l "${BUILD_DIR}"
-        echo "Contents of ${BUILD_DIR}_not_strip:"
-        ls -l "${BUILD_DIR}_not_strip"
-
-    - name: Generate Checksum and Compress
-      run: |
-        cd "${BUILD_DIR}"
-        echo "sha256:" >> checksums.txt
-        echo "------------------------------------" >> checksums.txt
-        shasum -a 256 * >> checksums.txt
-        echo "------------------------------------" >> checksums.txt
-        echo "openssl-sha256:" >> checksums.txt
-        echo "------------------------------------" >> checksums.txt
-        openssl sha256 * >> checksums.txt
-        cat checksums.txt
-        tar -cvzf ../${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz ../${BUILD_DIR}/*
-        
-        cd ../${BUILD_DIR}_not_strip
-        echo "sha256:" >> checksums.txt
-        echo "------------------------------------" >> checksums.txt
-        shasum -a 256 * >> checksums.txt
-        echo "------------------------------------" >> checksums.txt
-        echo "openssl-sha256:" >> checksums.txt
-        echo "------------------------------------" >> checksums.txt
-        openssl sha256 * >> checksums.txt
-        cat checksums.txt
-        tar -cvzf ../${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
-        
-        cd ..
-        mkdir -p "${COMPRESS_DIR}"
-        mv *.tar.gz "${COMPRESS_DIR}/"
-        cd "${COMPRESS_DIR}"
-        echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-        echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-        echo "sha256: $(shasum ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-        echo "openssl-sha256: $(openssl sha256 ${COIN_NAME}-macOS13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz)" >> checksums.txt
-        cat checksums.txt
-        cd ..
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.COIN_NAME }}-macOS13-x86-${{ needs.get-version.outputs.version }}
-        path: ${{ env.COMPRESS_DIR }}
-
-    - name: Generate Macos dmg files
-      run: |
-        make deploy
-        mkdir -p macos-dmg
-        mv Bitoreum-Qt.dmg macos-dmg/Crystal-Bitoreum-Qt.dmg
-        cd macos-dmg
-        echo "sha256: $(shasum Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
-        echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
-        cd ..
-
-    - name: Upload dmg file
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.COIN_NAME }}-macOS13-x86-dmg-${{ needs.get-version.outputs.version }}
-        path: macos-dmg
-
-#    - name: Upload Test Artifacts
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: ${{ env.COIN_NAME }}-macOS13-x86-test-${{ needs.get-version.outputs.version }}
-#        path: ${{ env.TEST_DIR }}
+#      - name: Upload Test Artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ env.COIN_NAME }}-macOS13-x86-test-${{ needs.get-version.outputs.version }}
+#          path: ${{ env.TEST_DIR }}
