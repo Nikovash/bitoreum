@@ -234,7 +234,7 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
- 
+
  #     - name: Upload Test Artifacts
  #       uses: actions/upload-artifact@v4
  #       with:
@@ -260,12 +260,12 @@ jobs:
           sudo apt-get install -y g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 nsis
           sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
- 
+
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
           make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
- 
+
       - name: Configure
         run: |
           ./autogen.sh
@@ -277,7 +277,7 @@ jobs:
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}/
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_not_strip/
           strip ${BUILD_DIR}/* || true
- 
+
       - name: Build Debug Binaries
         run: |
           make clean
@@ -287,7 +287,7 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli.exe,bitoreumd.exe,bitoreum-tx.exe,qt/bitoreum-qt.exe} ${BUILD_DIR}_debug/
- 
+
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -311,7 +311,7 @@ jobs:
             echo "openssl-sha256: $(sha256sum $f)" >> checksums.txt
           done
           cat checksums.txt
- 
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -341,7 +341,7 @@ jobs:
         with:
           name: Crystal-Bitoreum-win64-install-${{ needs.get-version.outputs.version }}
           path: win64-installation
-  
+
   build-ubuntu22-arm64:
     name: Ubuntu 22 ARM64 Build
     needs: get-version
@@ -357,17 +357,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
- 
+
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
           sudo apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake g++-aarch64-linux-gnu
- 
+
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
           make -C depends -j$(nproc) HOST=aarch64-linux-gnu
- 
+
       - name: Configure
         run: |
           ./autogen.sh
@@ -379,7 +379,7 @@ jobs:
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           strip ${BUILD_DIR}/* || true
- 
+
       - name: Build Debug Binaries
         run: |
           make clean
@@ -389,7 +389,7 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
- 
+
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -430,19 +430,19 @@ jobs:
             echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
- 
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
- 
+
 #      - name: Upload Test Artifacts
 #        uses: actions/upload-artifact@v4
 #        with:
 #          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
 #          path: ${{ env.TEST_DIR }}
-         
+
   build-ubuntu24-arm64:
     name: Ubuntu 24 ARM64 Build
     needs: get-version
@@ -458,17 +458,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
- 
+
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
           sudo apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake g++-aarch64-linux-gnu
- 
+
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
           make -C depends -j$(nproc) HOST=aarch64-linux-gnu
- 
+
       - name: Configure
         run: |
           ./autogen.sh
@@ -480,7 +480,7 @@ jobs:
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           strip ${BUILD_DIR}/* || true
- 
+
       - name: Build Debug Binaries
         run: |
           make clean
@@ -490,7 +490,7 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           cp src/{bitoreum-cli,bitoreumd,bitoreum-tx,qt/bitoreum-qt} ${BUILD_DIR}_debug/
- 
+
       - name: Generate Checksum and Compress
         run: |
           mkdir -p ${COMPRESS_DIR}
@@ -529,7 +529,7 @@ jobs:
             echo "------------------------------------" >> checksums.txt
           done
           cat checksums.txt
- 
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -564,7 +564,7 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin22
-    
+
       - name: Build Binaries
         run: |
           make -j$(sysctl -n hw.ncpu)
@@ -572,7 +572,7 @@ jobs:
           cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}/
           cp src/{bitoreum-cli,bitoreumd,qt/bitoreum-qt} ${BUILD_DIR}_not_strip/
           xcrun strip -x "${BUILD_DIR}/bitoreum-cli" "${BUILD_DIR}/bitoreumd" "${BUILD_DIR}/bitoreum-qt"
-		  
+
       - name: Generate Checksum and Compress
         run: |
           cd ${BUILD_DIR}
@@ -585,8 +585,8 @@ jobs:
           openssl sha256 * >> checksums.txt
           cat checksums.txt
           tar -cvzf ../${COIN_NAME}-macOS13-x86-${{ needs.get-version.outputs.version }}.tar.gz ../${BUILD_DIR}/*
-          
-		  cd ../${BUILD_DIR}_not_strip
+
+          cd ../${BUILD_DIR}_not_strip
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
           shasum -a 256 * >> checksums.txt
