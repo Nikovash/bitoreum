@@ -543,9 +543,9 @@ jobs:
 #          path: ${{ env.TEST_DIR }}
 
   build-macos-13-x86:
-    name: macOS 13 x86 Build
+    name: macOS 14 x86 Build
     needs: get-version
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Checkout
@@ -570,12 +570,12 @@ jobs:
       - name: Build Depends
         run: |
           echo "building with $(sysctl -n hw.ncpu) threads"
-          make -C depends -j$(sysctl -n hw.ncpu) HOST=x86_64-apple-darwin22
+          make -C depends -j$(sysctl -n hw.ncpu) HOST=x86_64-apple-darwin23
 
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin22
+          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin23
 
       - name: Build Binaries
         run: |
