@@ -1,0 +1,9 @@
+--- a/zutil.h
++++ b/zutil.h
+@@ -137,7 +137,9 @@
+ #    ifdef NO_FDOPEN
+-#        define fdopen(fd,mode) NULL /* No fdopen() */
++#        ifndef __APPLE__
++#          define fdopen(fd,mode) NULL /* No fdopen() */
++#        endif
+ #    endif

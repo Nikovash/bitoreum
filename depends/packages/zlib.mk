@@ -3,15 +3,19 @@ $(package)_version=1.2.11
 $(package)_download_path=http://www.zlib.net/fossils/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
+$(package)_patches=fdopen_macos.patch
 
 define $(package)_set_vars
-$(package)_cflags_darwin=-DHAVE_FDOPEN
 $(package)_build_opts= CC="$($(package)_cc)"
-$(package)_build_opts+=CFLAGS="$($(package)_cflags) $($(package)_cppflags) $($(package)_cflags_$(host_os)) -fPIC"
+$(package)_build_opts+=CFLAGS="$($(package)_cflags) $($(package)_cppflags) -fPIC"
 $(package)_build_opts+=RANLIB="$($(package)_ranlib)"
 $(package)_build_opts+=AR="$($(package)_ar)"
 $(package)_build_opts_darwin+=AR="$($(package)_libtool)"
 $(package)_build_opts_darwin+=ARFLAGS="-o"
+endef
+
+define $(package)_preprocess_cmds
+  patch -p1 -i $($(package)_patch_dir)/fdopen_macos.patch
 endef
 
 define $(package)_config_cmds
