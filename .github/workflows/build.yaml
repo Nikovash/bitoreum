@@ -542,14 +542,14 @@ jobs:
 #          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
 #          path: ${{ env.TEST_DIR }}
 
-  build-macos-14-x86:
-    name: macOS 14 x86 Build
+  build-macos-15-x86:
+    name: macOS 15 x86 Build
     needs: get-version
-    runs-on: macos-14
+    runs-on: macos-15-intel
     env:
-      MACOS_LABEL: macOS14
+      MACOS_LABEL: macOS15
       ARCH_TYPE: x86
-      OSX_HOST: x86_64-apple-darwin23
+      OSX_HOST: x86_64-apple-darwin24
 
     steps:
       - name: Checkout
