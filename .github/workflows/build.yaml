@@ -542,10 +542,14 @@ jobs:
 #          name: ${{ env.COIN_NAME }}-${{ env.OS }}-${{ env.ARCH_TYPE }}-test-${{ needs.get-version.outputs.version }}
 #          path: ${{ env.TEST_DIR }}
 
-  build-macos-13-x86:
+  build-macos-14-x86:
     name: macOS 14 x86 Build
     needs: get-version
     runs-on: macos-14
+    env:
+      MACOS_LABEL: macOS14
+      ARCH_TYPE: x86
+      OSX_HOST: x86_64-apple-darwin23
 
     steps:
       - name: Checkout
@@ -553,9 +557,6 @@ jobs:
 
       - name: Install Required Packages
         run: |
-          brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
-          pip3 install ds_store mac_alias
-          pip3 install -U pip setuptools
           for pkg in automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python; do
             if ! brew list --versions "$pkg" >/dev/null 2>&1; then
               echo "Installing $pkg..."
@@ -564,18 +565,22 @@ jobs:
               echo "$pkg already installed, skipping."
             fi
           done
-          pip3 install -U pip setuptools
-          pip3 install ds_store mac_alias
+
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python -m pip install -U pip setuptools
+          python -m pip install ds_store mac_alias
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Build Depends
         run: |
           echo "building with $(sysctl -n hw.ncpu) threads"
-          make -C depends -j$(sysctl -n hw.ncpu) HOST=x86_64-apple-darwin23
+          make -C depends -j$(sysctl -n hw.ncpu) HOST=${OSX_HOST}
 
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=$(pwd)/depends/x86_64-apple-darwin23
+          ./configure --prefix=$(pwd)/depends/${OSX_HOST}
 
       - name: Build Binaries
         run: |
@@ -594,40 +599,30 @@ jobs:
             fi
           done
 
-          echo "Contents of ${BUILD_DIR}:"
           ls -l "${BUILD_DIR}"
-          echo "Contents of ${BUILD_DIR}_not_strip:"
           ls -l "${BUILD_DIR}_not_strip"
 
       - name: Generate Checksum and Compress
         run: |
-          # Release (stripped)
           pushd "${BUILD_DIR}"
           echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           shasum -a 256 * >> checksums.txt || true
-          echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           openssl sha256 * >> checksums.txt || true
-          /usr/bin/zip -r -9 "../${COIN_NAME}-macOS13-x86-release-${{ needs.get-version.outputs.version }}.zip" .
+          /usr/bin/zip -r -9 "../${COIN_NAME}-${MACOS_LABEL}-${ARCH_TYPE}-release-${{ needs.get-version.outputs.version }}.zip" .
           popd
 
-          # Not-strip
           pushd "${BUILD_DIR}_not_strip"
           echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           shasum -a 256 * >> checksums.txt || true
-          echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
           openssl sha256 * >> checksums.txt || true
-          /usr/bin/zip -r -9 "../${COIN_NAME}-macOS13-x86-notstrip-${{ needs.get-version.outputs.version }}.zip" .
+          /usr/bin/zip -r -9 "../${COIN_NAME}-${MACOS_LABEL}-${ARCH_TYPE}-notstrip-${{ needs.get-version.outputs.version }}.zip" .
           popd
 
-          # Collect archives and global checksums
           mkdir -p "${COMPRESS_DIR}"
           mv ./*.zip "${COMPRESS_DIR}/"
+
           pushd "${COMPRESS_DIR}"
           {
             echo "Checksums for release archives:"
@@ -645,10 +640,10 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-macOS13-x86-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
-      - name: Generate Macos dmg files
+      - name: Generate macOS dmg files
         run: |
           make deploy
           mkdir -p macos-dmg
@@ -656,13 +651,13 @@ jobs:
           cd macos-dmg
           echo "sha256: $(shasum Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
           echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
-          cd ..
+
       - name: Upload dmg file
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-macOS13-x86-dmg-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-dmg-${{ needs.get-version.outputs.version }}
           path: macos-dmg
-
+          
 #      - name: Upload Test Artifacts
 #        uses: actions/upload-artifact@v4
 #        with:
