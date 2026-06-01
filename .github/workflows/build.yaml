@@ -574,8 +574,11 @@ jobs:
 
       - name: Build Depends
         run: |
-          echo "building with $(sysctl -n hw.ncpu) threads"
-          make -C depends -j$(sysctl -n hw.ncpu) HOST=${OSX_HOST}
+          clang++ --version
+          xcodebuild -version
+          sw_vers
+          echo "building macOS depends single-threaded for readable Boost errors"
+          make -C depends -j1 HOST=${OSX_HOST}
 
       - name: Configure
         run: |
