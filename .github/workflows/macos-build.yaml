@@ -340,6 +340,19 @@ jobs:
           echo "building with $(sysctl -n hw.ncpu) threads"
           make -C depends -j$(sysctl -n hw.ncpu) HOST=${OSX_HOST}
 
+      - name: Inspect Boost Thread
+        run: |
+          echo "=== Boost libs ==="
+          find depends/${OSX_HOST}/lib -name "*boost*" | sort
+
+          echo
+          echo "=== Thread libs ==="
+          find depends/${OSX_HOST}/lib -name "*thread*" | sort
+
+          echo
+          echo "=== Chrono libs ==="
+          find depends/${OSX_HOST}/lib -name "*chrono*" | sort
+
       - name: Configure
         run: |
           ./autogen.sh
