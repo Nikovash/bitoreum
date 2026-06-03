@@ -351,44 +351,6 @@ jobs:
           sw_vers
           echo "building with $(sysctl -n hw.ncpu) threads"
           make -C depends -j$(sysctl -n hw.ncpu) HOST=${OSX_HOST}
-
-      - name: Inspect Boost Thread
-        run: |
-          echo "=== Boost libs ==="
-          find depends/${OSX_HOST}/lib -name "*boost*" | sort
-
-          echo
-          echo "=== Thread libs ==="
-          find depends/${OSX_HOST}/lib -name "*thread*" | sort
-
-          echo
-          echo "=== Chrono libs ==="
-          find depends/${OSX_HOST}/lib -name "*chrono*" | sort
-
-      - name: Test Boost Thread Link
-        run: |
-          cat > boost_thread_test.cpp <<'EOF'
-          #include <boost/thread.hpp>
-          #include <boost/chrono.hpp>
-
-          int main() {
-              boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-              return 0;
-          }
-          EOF
-
-          clang++ -std=c++11 \
-            -Wno-enum-constexpr-conversion \
-            -D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION \
-            -Idepends/${OSX_HOST}/include \
-            boost_thread_test.cpp \
-            depends/${OSX_HOST}/lib/libboost_thread-mt-x64.a \
-            depends/${OSX_HOST}/lib/libboost_chrono-mt-x64.a \
-            depends/${OSX_HOST}/lib/libboost_system-mt-x64.a \
-            -lpthread \
-            -o boost_thread_test
-
-          ./boost_thread_test
           
       - name: Configure
         run: |
