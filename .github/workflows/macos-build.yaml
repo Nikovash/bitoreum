@@ -366,6 +366,8 @@ jobs:
           EOF
 
           clang++ -std=c++17 \
+            -Wno-enum-constexpr-conversion \
+            -D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION \
             -Idepends/${OSX_HOST}/include \
             boost_thread_test.cpp \
             depends/${OSX_HOST}/lib/libboost_thread-mt-x64.a \
@@ -375,7 +377,6 @@ jobs:
             -o boost_thread_test
 
           ./boost_thread_test
-
       - name: Configure
         run: |
           ./autogen.sh
