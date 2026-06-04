@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - dev
+      - dev-a
       - Codex
       - 4.x
     tags:
@@ -16,11 +17,13 @@ on:
     branches:
       - main
       - dev
+      - dev-a
       - Codex
       - 4.x
   workflow_dispatch:
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   COIN_NAME: bitoreum
   BUILD_DIR: bitoreum-build
   COMPRESS_DIR: bitoreum-compress
@@ -44,7 +47,7 @@ jobs:
         run: |
           echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Generate Version Logic
         id: selected-version
@@ -53,7 +56,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "BUILD_VERSION=$VERSION" > version.txt
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: version
           path: version.txt
@@ -69,7 +72,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Required Packages
         run: |
@@ -163,7 +166,7 @@ jobs:
           popd
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
@@ -178,13 +181,13 @@ jobs:
           echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
 
       - name: Upload dmg file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-dmg-${{ needs.get-version.outputs.version }}
           path: macos-dmg
           
 #      - name: Upload Test Artifacts
-#        uses: actions/upload-artifact@v4
+#        uses: actions/upload-artifact@v6
 #        with:
 #          name: ${{ env.COIN_NAME }}-macOS13-x86-test-${{ needs.get-version.outputs.version }}
 #          path: ${{ env.TEST_DIR }}
@@ -200,7 +203,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Required Packages
         run: |
@@ -294,7 +297,7 @@ jobs:
           popd
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
@@ -309,7 +312,7 @@ jobs:
           echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
 
       - name: Upload dmg file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-dmg-${{ needs.get-version.outputs.version }}
           path: macos-dmg
@@ -325,7 +328,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Required Packages
         run: |
@@ -419,7 +422,7 @@ jobs:
           popd
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
@@ -434,7 +437,7 @@ jobs:
           echo "openssl-sha256: $(openssl sha256 Crystal-Bitoreum-Qt.dmg)" >> checksums.txt
 
       - name: Upload dmg file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.COIN_NAME }}-${{ env.MACOS_LABEL }}-${{ env.ARCH_TYPE }}-dmg-${{ needs.get-version.outputs.version }}
           path: macos-dmg
