@@ -657,7 +657,7 @@ std::string LicenseInfo()
     const std::string URL_SOURCE_CODE = "<https://github.com/Nikovash/bitoreum>";
     const std::string URL_WEBSITE = "<https://bitoreum.cc>";
 
-    return CopyrightHolders(_("Copyright (C)"), 2014, COPYRIGHT_YEAR) + "\n" +
+    return CopyrightHolders(_("Copyright \302\251"), 2014, COPYRIGHT_YEAR) + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                        "Visit %s for further information about the software."),
