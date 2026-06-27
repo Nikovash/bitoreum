@@ -3843,7 +3843,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
 
-    int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST) && pindexPrev != nullptr
+    int64_t nLockTimeCutoff = ((nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST) && (pindexPrev != nullptr))
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
 

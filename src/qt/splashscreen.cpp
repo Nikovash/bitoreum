@@ -25,8 +25,107 @@
 
 #include <QApplication>
 #include <QCloseEvent>
+#include <QDate>
 #include <QDesktopWidget>
+#include <QFontMetrics>
+#include <QKeyEvent>
+#include <QLinearGradient>
 #include <QPainter>
+#include <QPainterPath>
+#include <QRect>
+#include <QSize>
+#include <QtGlobal>
+
+static QString CopyrightYears()
+{
+    const int startYear = 2025;
+    const int currentYear = QDate::currentDate().year();
+
+    if (currentYear > startYear) {
+        return QString("%1-%2").arg(startYear).arg(currentYear);
+    }
+
+    return QString::number(startYear);
+}
+
+static void DrawSplashTextFades(QPainter& painter, int width, int height)
+{
+    // Dark purple/navy preserves the neon artwork better than pure black.
+    const QColor fadeColor(10, 8, 32);
+
+    const int topFadeHeight = static_cast<int>(height * 0.24);
+    QLinearGradient topFade(0, 0, 0, topFadeHeight);
+    topFade.setColorAt(0.00, QColor(fadeColor.red(), fadeColor.green(), fadeColor.blue(), 185));
+    topFade.setColorAt(0.45, QColor(fadeColor.red(), fadeColor.green(), fadeColor.blue(), 95));
+    topFade.setColorAt(1.00, QColor(fadeColor.red(), fadeColor.green(), fadeColor.blue(), 0));
+    painter.fillRect(QRect(0, 0, width, topFadeHeight), topFade);
+
+    const int bottomFadeHeight = static_cast<int>(height * 0.26);
+    QLinearGradient bottomFade(0, height, 0, height - bottomFadeHeight);
+    bottomFade.setColorAt(0.00, QColor(fadeColor.red(), fadeColor.green(), fadeColor.blue(), 170));
+    bottomFade.setColorAt(0.50, QColor(fadeColor.red(), fadeColor.green(), fadeColor.blue(), 85));
+    bottomFade.setColorAt(1.00, QColor(fadeColor.red(), fadeColor.green(), fadeColor.blue(), 0));
+    painter.fillRect(QRect(0, height - bottomFadeHeight, width, bottomFadeHeight), bottomFade);
+}
+
+static void DrawSplashBranding(QPainter& painter, int width, int height, float fontFactor)
+{
+    const QColor accentColor(0, 255, 213);      // Website teal.
+    const QColor textColor(235, 245, 255);      // Soft white.
+    const QColor panelColor(7, 10, 26);         // Deep navy.
+    const QColor panelEdgeColor(0, 255, 213, 35);
+
+    const QString networkText = QObject::tr("Bitoreum Network");
+    const QString copyrightText = QString::fromUtf8("© %1 The Crystal Bitoreum developers")
+                                      .arg(CopyrightYears());
+    const QString hostedText = QObject::tr("Hosted by Ramen Wukong");
+
+    // Lower-center readability pocket for network branding.
+    const int panelWidth = static_cast<int>(width * 0.78);
+    const int panelHeight = static_cast<int>(height * 0.18);
+    const int panelX = (width - panelWidth) / 2;
+    const int panelY = static_cast<int>(height * 0.69);
+
+    QRect panelRect(panelX, panelY, panelWidth, panelHeight);
+
+    QPainterPath panelPath;
+    panelPath.addRoundedRect(panelRect, 8, 8);
+
+    QLinearGradient panelGradient(0, panelRect.top(), 0, panelRect.bottom());
+    panelGradient.setColorAt(0.00, QColor(panelColor.red(), panelColor.green(), panelColor.blue(), 65));
+    panelGradient.setColorAt(0.35, QColor(panelColor.red(), panelColor.green(), panelColor.blue(), 150));
+    panelGradient.setColorAt(1.00, QColor(panelColor.red(), panelColor.green(), panelColor.blue(), 95));
+
+    painter.fillPath(panelPath, panelGradient);
+
+    painter.setPen(panelEdgeColor);
+    painter.drawPath(panelPath);
+
+    QFont titleFont = GUIUtil::getFontBold();
+    titleFont.setPointSize(static_cast<int>(24 * fontFactor));
+    titleFont.setCapitalization(QFont::AllUppercase);
+    titleFont.setLetterSpacing(QFont::AbsoluteSpacing, 3.5);
+    painter.setFont(titleFont);
+    painter.setPen(accentColor);
+
+    QFontMetrics titleMetrics(painter.fontMetrics());
+    const int titleY = panelRect.top() + static_cast<int>(panelHeight * 0.36);
+    painter.drawText((width - titleMetrics.width(networkText)) / 2, titleY, networkText);
+
+    QFont smallFont = GUIUtil::getFontNormal();
+    smallFont.setPointSize(static_cast<int>(11 * fontFactor));
+    smallFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.0);
+    painter.setFont(smallFont);
+    painter.setPen(textColor);
+
+    QFontMetrics smallMetrics(painter.fontMetrics());
+
+    const int copyrightY = panelRect.top() + static_cast<int>(panelHeight * 0.63);
+    painter.drawText((width - smallMetrics.width(copyrightText)) / 2, copyrightY, copyrightText);
+
+    const int hostedY = panelRect.top() + static_cast<int>(panelHeight * 0.83);
+    painter.drawText((width - smallMetrics.width(hostedText)) / 2, hostedY, hostedText);
+}
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
     QWidget(0, f), curAlignment(0), m_node(node)
@@ -40,21 +139,23 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     setWindowFlags(Qt::FramelessWindowHint);
 
     // Geometries of splashscreen
-    int width = 480;
-    int height = 540;
-    int logoWidth = 480;
-    int logoHeight = 540;
+    QRect screenGeometry = QApplication::desktop()->availableGeometry(this);
+
+    int width = qMax(320, qMin(480, int(screenGeometry.width() * 0.55)));
+    int height = qMax(360, qMin(540, int(screenGeometry.height() * 0.72)));
+    int logoWidth = width;
+    int logoHeight = height;
 
     // set reference point, paddings
     int paddingTop = 5;
     int titleVersionVSpace = 20;
 
-    float fontFactor            = 1.0;
+    float fontFactor = qMax(0.70f, qMin(1.0f, width / 480.0f));
     float scale = qApp->devicePixelRatio();
 
     // define text to place
-    QString titleText    = tr(PACKAGE_NAME);
-    QString versionText  = QString::fromStdString(FormatFullVersion()).remove(0, 1);
+    QString titleText    = tr("Bitoreum Network");
+    QString versionText  = QString::fromStdString(FormatFullVersion());
     QString titleAddText = networkStyle->getTitleAddText();
 
     QFont fontNormal = GUIUtil::getFontNormal();
@@ -80,13 +181,19 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     pixmap.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
 
     QPainter pixPaint(&pixmap);
+    pixPaint.setRenderHint(QPainter::Antialiasing, true);
+    pixPaint.setRenderHint(QPainter::TextAntialiasing, true);
+    pixPaint.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
     QRect rect = QRect(1, 1, width - 2, height - 2);
     pixPaint.fillRect(rect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
 
-    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 0, pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    //pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
-    pixPaint.setPen(Qt::white);
+    pixPaint.drawPixmap((width / 2) - (logoWidth / 2),
+                        (height / 2) - (logoHeight / 2),
+                        pixmapLogo.scaled(logoWidth * scale,
+                                          logoHeight * scale,
+                                          Qt::KeepAspectRatio,
+                                          Qt::SmoothTransformation));
 
     // check font size and drawing with
     fontBold.setPointSize(50 * fontFactor);
@@ -94,17 +201,27 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QFontMetrics fm = pixPaint.fontMetrics();
     int titleTextWidth = fm.width(titleText);
     if (titleTextWidth > width * 0.8) {
-        fontFactor = 0.75;
+        fontFactor = qMin(fontFactor, 0.75f);
     }
 
-    fontNormal.setPointSize(16 * fontFactor);
+    DrawSplashTextFades(pixPaint, width, height);
+    DrawSplashBranding(pixPaint, width, height, fontFactor);
+
+    //pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
+    pixPaint.setPen(Qt::white);
+
+    fontNormal.setPointSize(static_cast<int>(18 * fontFactor));
+    fontNormal.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
     pixPaint.setFont(fontNormal);
     fm = pixPaint.fontMetrics();
-    int versionTextWidth  = fm.width(versionText);
-    pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleVersionVSpace, versionText);
+
+    int versionTextWidth = fm.width(versionText);
+    pixPaint.drawText((width / 2) - (versionTextWidth / 2),
+                      titleVersionVSpace + fm.ascent(),
+                      versionText);
 
     // draw additional text if special network
-    if(!titleAddText.isEmpty()) {
+    if (!titleAddText.isEmpty()) {
         fontBold.setPointSize(24 * fontFactor);
         pixPaint.setFont(fontBold);
         fm = pixPaint.fontMetrics();
@@ -124,7 +241,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect r(QPoint(), QSize(width, height));
     resize(r.size());
     setFixedSize(r.size());
-    move(QApplication::desktop()->screenGeometry().center() - r.center());
+    move(screenGeometry.center() - r.center());
 
     subscribeToCoreSignals();
     installEventFilter(this);
@@ -138,7 +255,7 @@ SplashScreen::~SplashScreen()
 bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     if (ev->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
-        if(keyEvent->text()[0] == 'q') {
+        if (!keyEvent->text().isEmpty() && keyEvent->text()[0] == 'q') {
             m_node.startShutdown();
         }
     }
@@ -170,8 +287,8 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
 {
     InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? _("(press q to shutdown and continue later)")
-                                : _("press q to shutdown")) +
+            (resume_possible ? _("q = quit, resumes later")
+                                : _("q = quit")) +
             strprintf("\n%d", nProgress) + "%");
 }
 #ifdef ENABLE_WALLET
@@ -217,12 +334,20 @@ void SplashScreen::showMessage(const QString &message, int alignment, const QCol
 
 void SplashScreen::paintEvent(QPaintEvent *event)
 {
+    Q_UNUSED(event);
+
     QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::TextAntialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
     QFont messageFont = GUIUtil::getFontNormal();
-    messageFont.setPointSize(14);
+    messageFont.setStyleStrategy(QFont::PreferAntialias);
+    messageFont.setPointSize(11);
+    messageFont.setLetterSpacing(QFont::AbsoluteSpacing, 0.4);
     painter.setFont(messageFont);
     painter.drawPixmap(0, 0, pixmap);
-    QRect r = rect().adjusted(5, 5, -5, -15);
+    QRect r = rect().adjusted(3, 5, -3, -18);
     painter.setPen(curColor);
     painter.drawText(r, curAlignment, curMessage);
 }
