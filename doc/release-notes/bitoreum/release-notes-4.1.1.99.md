@@ -79,6 +79,64 @@ The `.99` suffix designates this as a development build and not a production rel
 - Corrected build and preprocessing issues affecting modern macOS environments
 - Updated patch handling and validation procedures
 
+## Qt GUI, Splash Screen, and Visual Branding Updates
+
+### Linux Qt Scaling Compatibility
+
+* Added Linux-specific Qt scaling normalization for the legacy Qt wallet interface
+* Disabled automatic Qt high-DPI scaling by default on Linux to prevent oversized or inconsistent GUI rendering
+* Added an opt-in environment variable escape hatch for users who prefer native system scaling behavior:
+
+```bash
+BITOREUM_QT_RESPECT_SYSTEM_SCALE=1 ./bitoreum-qt
+```
+
+* Preserved existing high-DPI pixmap behavior for non-Linux platforms
+* Improved consistency of wallet startup rendering across modern Linux desktop environments
+
+### Splash Screen Modernization
+
+* Reworked the Qt splash screen layout for the Crystal Bitoreum visual identity
+* Updated splash screen rendering to use the active `splash.png` asset as the primary background artwork
+* Added runtime-rendered readability gradients instead of baking all text and fades into the image asset
+* Added centered version display using the full development version string
+* Added Bitoreum Network branding directly in the splash rendering code
+* Added dynamic Crystal Bitoreum copyright year handling
+* Added hosted-by branding for Ramen Wukong
+* Reduced and cleaned up startup progress/status text to prevent wrapping and layout issues
+* Improved splash screen readability across different desktop scaling environments
+
+### Image and Icon Asset Refresh
+
+* Updated Bitoreum GUI icon assets across Qt and shared pixmap resources
+* Added refreshed Bitoreum pixmap assets under `share/pixmaps`
+* Updated favicon and application icon files for current Bitoreum branding
+* Updated macOS `.icns`, Windows/Linux `.ico`, and PNG icon resources
+* Replaced the active Qt splash image with a new `960x1080` PNG asset
+* Optimized the active splash PNG by removing unnecessary metadata and legacy alpha data
+* Removed unused legacy splash image variants from the Qt image resource folder
+* Simplified the active splash image set so the Qt resource system uses only `src/qt/res/images/splash.png`
+
+## Source Cleanup and Validation Clarifications
+
+### Locktime Cutoff Readability
+
+* Clarified the locktime cutoff condition in validation logic
+* Made the previous-block null check explicit in the locktime cutoff expression
+* Preserved existing consensus behavior while improving code readability and intent
+* Confirmed this change is not intended to alter block, transaction, wallet, or network behavior
+
+## Additional Validation Notes
+
+**Additional work validated during this development checkpoint:**
+
+* Qt GUI startup rendering
+* Linux splash screen scaling behavior
+* Updated splash image loading through the Qt resource system
+* Refreshed icon and favicon assets
+* Removal of unused splash image variants
+* Continued non-consensus source modernization cleanup
+
 ## Future Development Direction
 
 The 4.1.1.99 development cycle establishes a modernized build foundation for future Crystal Bitoreum development.
