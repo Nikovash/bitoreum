@@ -1,0 +1,9 @@
+--- a/qtbase/src/plugins/platforms/windows/qwindowsmousehandler.cpp
++++ b/qtbase/src/plugins/platforms/windows/qwindowsmousehandler.cpp
+@@ -59,7 +59,7 @@
+ 
+ QT_BEGIN_NAMESPACE
+ 
+-#if defined(Q_CC_MINGW) || !defined(TOUCHEVENTF_MOVE)
++#if !defined(TOUCHEVENTF_MOVE)
+ 

@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
-// Copyright (c) 2023 The Bitoreum developers
-// Copyright (c) 2023 The Crystal Bitoreum developers
+// Copyright © 2009-2010 Satoshi Nakamoto
+// Copyright © 2009-2015 The Bitcoin Core developers
+// Copyright © 2014-2020 The Dash Core developers
+// Copyright © 2020-2022 The Raptoreum developers
+// Copyright © 2021 - 2023 The Bitoreum developers
+// Copyright © 2025 The Crystal Bitoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1148,22 +1148,33 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(" %u ", nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    const std::string copyright_holders =
+        strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION);
 
-    // Check for untranslated substitution to make sure Dash Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitoreum Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2021, nEndYear) + "The Bitoreum Core developers";
+    std::string strCopyrightHolders =
+        strPrefix + strprintf(" %u-%u ", 2025, nEndYear) +
+        strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+
+    // Upstream Bitoreum lineage - Check for untranslated substitution to make sure Bitoreum Core copyright is not removed by accident
+    if (copyright_holders.find("The Bitoreum Core developers") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2021, 2023) + "The Bitoreum Core developers";
     }
 
-    // Check for untranslated substitution to make sure Dash Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Dash Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2014, nEndYear) + "The Dash Core developers";
+    // Upstream Raptoreum lineage - Check for untranslated substitution to make sure Raptoreum Core copyright is not removed by accident
+    if (copyright_holders.find("The Raptoreum Core developers") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2020, 2022) + "The Raptoreum Core developers";
     }
-    // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2014, nEndYear) + "The Dash Core developers";
-        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2009, nEndYear) + "The Bitcoin Core developers";
+
+    // Upstream Dash lineage - Check for untranslated substitution to make sure Dash Core copyright is not removed by accident
+    if (copyright_holders.find("The Dash Core developers") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2014, 2020) + "The Dash Core developers";
     }
+
+    // Upstream Bitcoin lineage - Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
+    if (copyright_holders.find("The Bitcoin Core developers") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2009, 2017) + "The Bitcoin Core developers";
+    }
+
     return strCopyrightHolders;
 }
 
