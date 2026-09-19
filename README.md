@@ -9,7 +9,7 @@ The last known communication from the original lead developer occurred on **May 
 Crystal Bitoreum retains the original `$BTRM` token. Our mission is to:
 
 - Fix known issues present in the original 3.0.2.1 `Transilvania` core
-- Transparently fund future development using post-fork dev fees [Transparency Portal](http://localhost:4321/accounting)
+- Transparently fund future development using post-fork dev fees [Transparency Portal](https://bitoreum.cc/accounting/)
 - Build a collaborative and resilient team to ensure the project endures
 - Maintian helathy mining partnerships
 - Maintain & expand Exhange presence
